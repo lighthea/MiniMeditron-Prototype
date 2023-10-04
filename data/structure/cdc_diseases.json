@@ -1,0 +1,12 @@
+{
+  "Disease Name": "",
+  "Symptoms": [
+    {
+      "Symptom Name": "",
+      "Symptom Description": "",
+      "Disease stage" : ""}
+  ],
+
+  "Prevention" : [],
+  "Treatment" : []
+}
