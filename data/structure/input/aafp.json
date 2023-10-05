@@ -1,0 +1,16 @@
+{
+  "prompt" : "",
+  "type" : "",
+  "document_structure": {
+  "Main Subject": "",
+  "Use cases": [
+    {
+      "Treatment": [
+        "Indications",
+        "Counter-Indication"
+      ]
+    }
+  ],
+  "Additional information": ""
+}
+}

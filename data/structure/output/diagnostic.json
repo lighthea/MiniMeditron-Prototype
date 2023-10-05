@@ -1,0 +1,13 @@
+{
+  "task" : "diagnosing patients",
+  "desc" : "Complete the structure by giving a condition name and a precision",
+  "output_structure" :
+            {
+              "Name of Condition" : "",
+              "Precision" : ""
+            }
+          ,
+
+  "expanded_desc" : "a diagnostic of a patient described by a condition name and a precision in a structured form"
+
+}

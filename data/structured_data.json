@@ -1,0 +1,102 @@
+{
+"Guidelines" : [
+  {
+  "Disease Name": "African Tick Bite Fever",
+  "Symptoms": [
+    {
+      "Symptom Name": "Eschar",
+      "Symptom Description": "A red sore that develops a dark crust at the site of tick bite. Multiple eschars may be present if there are multiple tick bites.",
+      "Disease stage": "Early stage"
+    },
+    {
+      "Symptom Name": "Fever",
+      "Symptom Description": "Elevated body temperature, often accompanied by chills and sweating.",
+      "Disease stage": "Later stage"
+    },
+    {
+      "Symptom Name": "Headache",
+      "Symptom Description": "A continuous or throbbing pain in the head.",
+      "Disease stage": "Later stage"
+    },
+    {
+      "Symptom Name": "Muscle Soreness",
+      "Symptom Description": "Aching or discomfort in muscles, often due to inflammation or injury.",
+      "Disease stage": "Later stage"
+    },
+    {
+      "Symptom Name": "Swollen Lymph Nodes",
+      "Symptom Description": "Enlarged and tender lymph nodes, usually indicating an infection or immune response.",
+      "Disease stage": "Later stage"
+    },
+    {
+      "Symptom Name": "Rash",
+      "Symptom Description": "Visible skin eruption or discoloration, often accompanied by itching or pain.",
+      "Disease stage": "Later stage"
+    }
+  ],
+  "Prevention": [
+    "Know where to expect ticks and avoid grassy, brushy, or wooded areas.",
+    "Treat clothing and gear with products containing 0.5% permethrin.",
+    "Use EPA-registered insect repellents containing DEET, picaridin, IR3535, Oil of Lemon Eucalyptus (OLE), para-menthane-diol (PMD), or 2-undecanone.",
+    "Avoid contact with ticks by walking in the center of trails and checking for ticks on clothing, pets, and gear.",
+    "Shower within two hours of coming indoors and conduct a full body check for ticks.",
+    "Remove attached ticks as soon as possible."
+  ],
+  "Treatment": []
+},
+{
+  "Disease Name": "African Trypanosomiasis (African Sleeping Sickness)",
+  "Symptoms": [
+    {
+      "Symptom Name": "Fatigue",
+      "Symptom Description": "A state of extreme tiredness and lack of energy."
+    },
+    {
+      "Symptom Name": "High Fever",
+      "Symptom Description": "An abnormally elevated body temperature, often indicating an infection or illness."
+    },
+    {
+      "Symptom Name": "Headaches",
+      "Symptom Description": "A continuous or throbbing pain in the head."
+    },
+    {
+      "Symptom Name": "Muscle Aches",
+      "Symptom Description": "Pain or discomfort in muscles, often due to inflammation or injury."
+    }
+  ],
+  "Prevention": [
+    "Cover exposed skin by wearing long-sleeved shirts, long pants, and hats. Clothing fabric should be at least medium weight to prevent tsetse fly bites.",
+    "Wear neutral-colored clothing as tsetse flies are attracted to bright colors, very dark colors, metallic fabric, particularly blue and black.",
+    "Avoid bushes during the day, as tsetse flies rest in bushes and will bite if disturbed.",
+    "Inspect vehicles for tsetse flies before entering, as they are attracted to the motion and dust from moving vehicles.",
+    "Use insect repellent, although there is limited evidence that it works against tsetse flies. It can still prevent other diseases spread by bug bites."
+  ],
+  "Treatment": []
+},
+{
+  "Disease Name": "Avian Flu (Bird Flu)",
+  "Symptoms": [
+    {
+      "Symptom Name": "Mild Symptoms",
+      "Symptom Description": "Eye redness (conjunctivitis), cough, sore throat, runny or stuffy nose, muscle or body aches, headaches, tiredness."
+    },
+    {
+      "Symptom Name": "Severe Symptoms",
+      "Symptom Description": "High fever, shortness of breath, difficulty breathing. Severe cases can lead to pneumonia."
+    },
+    {
+      "Symptom Name": "Less Common Symptoms",
+      "Symptom Description": "Diarrhea, nausea, vomiting, seizures."
+    }
+  ],
+  "Prevention": [
+    "Avoid visiting poultry farms, live animal markets, and other places where live poultry are raised, kept, slaughtered, or sold. If necessary, wear a well-fitting facemask and avoid touching poultry or other birds.",
+    "If visiting wetlands or outdoor places where birds live, take steps to avoid germs during and after the visit.",
+    "Avoid touching sick or dead wild birds or poultry.",
+    "Wash hands often with soap and water for at least 20 seconds, especially after contact with birds or places where birds are kept. If soap and water are not available, use hand sanitizer with at least 60% alcohol.",
+    "Avoid touching eyes, nose, or mouth with unclean hands.",
+    "Avoid close contact with sick people, such as kissing, hugging, or sharing eating utensils or cups."
+  ],
+  "Treatment": []
+}]
+}
