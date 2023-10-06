@@ -47,9 +47,25 @@ The output is a JSON formatted list of treatments, certainty, document source.
 
 ### Full automatic report generation
 
-This subtask takes as input the JSON formatted data of all the other tasks and produces a short report in human readable
+This subtask takes as input the JSON formatted data of all the other tasks and produces a short report in human-readable
 language explaining the logic of the diagnostic and the treatment.
 The output is a free form text summarising the whole process.
+
+## Data
+
+### Data sources
+
+The data used is a combination of case studies and guidelines. Each data source must be associated to one or multiple tasks.
+Those tasks allow to link a structural representation of the data to the task it is used for.
+The tasks are :
+- Case description 
+  - Comes in three forms : 
+    - Contains only symptoms
+    - Contains symptoms and diagnosis
+    - Contains symptoms, diagnosis and treatment
+- Diagnostics : A file containing a list of conditions and their associated symptoms
+- Treatments : A file containing a list of treatments and their associated conditions
+
 
 ## Coding framework
 
@@ -64,3 +80,8 @@ In this framework we use two main base level objects :
   - Structuriser take free form text and output one of the JSON formatted pipe
   - MultiLabeledClassifierWithCommentary take a JSON formatted pipe and outputs another that represent logits of a classification
   - Verbaliser take a JSON formatted pipe and outputs free form text
+
+### Agents
+
+An agent represents a pipeline of blocks that can be used to process a pipe. Agents have input and output points with descriptions.
+We can put multiple agent in a same environment and make the communicate following a protocol so that they can work together in parallel.
