@@ -36,27 +36,28 @@ class Structuriser(dspy.Module):
         # Set the structure
         self.structure: dict = structure_file["document_structure"]
         # Describe the signature of the output
-        self.arg1: str = f"a {self.type}"
-        self.arg2: str = "structure to follow"
-        self.output: str = "completed structure from context"
+        self.arg1: str = f"{self.type}"
+        self.arg2: str = "structure"
+        self.output: str = "completed_structure"
         self.structuriser: dspy.Predict = dspy.Predict(
             f"{self.arg1}, {self.arg2} -> {self.output}")
 
-    def forward(self, context: str):
+    def forward(self, context: str, **kwargs):
         """
         This function takes a context and outputs a structured document
+        :param kwargs: additional arguments to pass to the model
         :param context: The context of the structured document
         :return: A structured document
         """
 
-        kwargs = {self.arg1: context, self.arg2: self.structure}
-        return self.structuriser(**kwargs)
+        arguments = {self.arg1: context, self.arg2: str(self.structure)}
+        return self.structuriser(**arguments, **kwargs)
 
 
-class MultiLabeledClassifierWithCommentary(dspy.Module):
+class GeneralTransformation(dspy.Module):
     def __init__(self, output_structure_file: str):
         """
-        This module takes a structure file and outputs a structured data with commentary using structured data as input
+        This module takes a structure file and outputs a structured data with commentary using structured data and knowledge db as input
         The structure file should contain :
             - A "output_structure" key with arbitrary sub objects representing the fields to predict of the form :
                 {output_1_name, output_2_name, ...}
@@ -94,17 +95,19 @@ class MultiLabeledClassifierWithCommentary(dspy.Module):
         self.output_names: list = list(self.output_structure.keys())
         # Describe the signature of the output
         self.arg1: str = f"structured data for {self.task_name}"
+        self.arg2: str = "Relevant information : "
         self.outputs: str = f"{', '.join(self.output_names)}"
         self.classifier: dspy.Predict = dspy.Predict(
-            f"{self.arg1} -> {self.outputs}")
+            f"{self.arg1}, {self.arg2} -> {self.outputs}")
 
-    def forward(self, structured_data: dict):
+    def forward(self, structured_data: dict, relevant_knowledge: str):
         """
         This function takes a structured data and outputs a structured data with commentary
+        :param relevant_knowledge: the additional information given for the task
         :param structured_data: The structured data
         :return: A structured data with commentary
         """
-        kwarg = {self.arg1: str(structured_data)}
+        kwarg = {self.arg1: str(structured_data), self.arg2: relevant_knowledge}
         return self.classifier(**kwarg)
 
 

@@ -1,0 +1,39 @@
+{
+  "symptoms": [
+    {
+      "name of the symptom": "",
+      "intensity of symptom": "",
+      "specific attributes of the symptom": {
+        "location": "",
+        "Quality of": "",
+        "temporalisation": ""
+
+      },
+      "When did the symptom appear ": "",
+      "previous treatments": "",
+      "reaction to previous treaments": "",
+      "behaviour affecting the symptom": ""
+    }
+  ],
+  "socio economic context": {
+  },
+  "geographic_context": {
+    "location": "",
+    "recent travels": "",
+    "level of care": ""
+  },
+  "physiological context": {
+  },
+  "psychological context": {
+  },
+  "personal medical_history": {
+  },
+  "family medical_history": {
+  },
+  "current medication": {
+  },
+  "lifestyle factors": {
+  },
+  "results of recent medical tests": {
+  }
+}
