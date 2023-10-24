@@ -35,10 +35,7 @@ if __name__ == "__main__":
     
     input_text = """Here is a patient description : 
 
-He is a 52-year-old male who has been feeling unwell for about two weeks. He experiences shortness of breath, a tight feeling in his chest, and radiating pain to his left arm. The symptoms have worsened in the last 48 hours, and rest does not alleviate the discomfort.
-He has a 10-year history of hypertension and has been diabetic for 5 years. He has no prior heart issues, but his father died of a heart attack at the age of 60. His mother is alive but has high blood pressure.
-He is currently on Metformin for diabetes and Lisinopril for hypertension. He has been smoking for 20 years, consuming about 10 cigarettes per day, and drinks alcohol occasionally. He does not use any illegal drugs.
-Recent medical tests revealed concerning results. An EKG showed T-wave inversion, and his troponin and fasting glucose levels were elevated. Other tests like the CBC and CMP were within normal limits.
+Patient is a 40-year-old individual presenting with a recent onset of intense joint pain, localized predominantly in the wrists and knees. Accompanying symptoms include a moderate fever, mild to moderate headache, muscle pain, and mild joint swelling, notably in the knees. Additionally, a widespread rash has appeared on limbs and torso with associated moderate itching. Patient attempted self-management with over-the-counter pain relievers and anti-itch cream, yielding limited relief. No significant medical history reported. Socio-economically middle-income, accessing care at a local clinic. Recent travel history includes tropical regions with preventive measures taken. Further diagnostic investigation is warranted to elucidate the underlying cause of symptoms.
 
 Fill the following structure accordingly. Don't change it.
 If the information is not given, don't write anything, leave it as an empty section.
@@ -53,16 +50,16 @@ Only answer with the filled structure.
       "specific attributes of the symptom": {
         "location": "",
         "size": "",
-        "color": "",
-        "frequency": ""
+        "color": ""
       },
       "When did the symptom appear ": "",
       "previous treatments": "",
-      "reaction to previous treaments"
+      "reaction to previous treaments": "",
       "behaviour affecting the symptom": ""
     }
   ],
   "socio economic context": {
+  
   },
   "geographic_context": {
       "recent travels": "",
