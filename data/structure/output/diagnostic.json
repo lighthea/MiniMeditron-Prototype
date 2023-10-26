@@ -3,8 +3,7 @@
   "desc" : "Complete the structure by giving a condition name and a precision",
   "output_structure" :
             {
-              "Name of Condition" : "",
-              "Precision" : ""
+              "Names of Conditions" : []
             }
           ,
 
