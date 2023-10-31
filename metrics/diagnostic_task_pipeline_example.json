@@ -1,0 +1,15 @@
+{
+    "description" : "Extract a diagnosis from a guideline",
+    "type" : "guideline",
+    "prompt" : "Fill the following structure accordingly. Don't change it.\nIf the information is not given, don't write anything, leave it as an empty section.\nIf an information is true for multiple symptoms, repeat the information.\nOnly answer with the filled structure.\n",
+    "document_structure": {
+      "Condition": "Cholera",
+      "Symptoms list": [],
+      "Contextual info": {
+        "Factors affecting diagnostic": []
+      },
+      "Additional test to decide between diagnosis": "",
+      "Related diagnosis": ["disease1", "disease2"]
+    }
+  }
+  
