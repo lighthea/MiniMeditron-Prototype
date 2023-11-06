@@ -84,3 +84,36 @@ def classify_condition(condition, ground_truth, related_conditions, THRESHOLD):
     
     return "unrelated"
 
+
+# embeddings metrics
+
+import torch
+import torch.nn.functional as F
+
+def tensor_distance(tensor1, tensor2, distance_type="L2"):
+    """
+    Compute the L2 (Euclidean) distance between two tensors of the same shape.
+    
+    Args:
+    - tensor1 (torch.Tensor): The first tensor.
+    - tensor2 (torch.Tensor): The second tensor.
+    - distance_type (str): The type of distance to compute. Currently only
+    
+    Returns:
+    - float: The distance / similarity between the two tensors.
+    """
+    
+    if tensor1.shape != tensor2.shape:
+        raise ValueError("Both tensors must have the same shape.")
+
+    if distance_type == "L2":
+        distance = torch.norm(tensor1 - tensor2)
+    elif distance_type == "Manhattan":
+        distance = torch.sum(torch.abs(tensor1 - tensor2))
+    elif distance_type == "Cosine":
+        similarity = F.cosine_similarity(tensor1, tensor2)
+        distance = 1 - similarity
+    elif distance_type == "Minkowski":
+        distance = torch.norm(tensor1 - tensor2, p=3)
+    
+    return distance
