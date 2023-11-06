@@ -1,4 +1,5 @@
 import json
+import resource
 
 
 class Block():
@@ -20,6 +21,13 @@ class Block():
         return self.model(prompt)
     
     def fill(self, output_json, inputs):
+        prompt = ''''''
+        if resource != None:
+            # load the resources and put the relevant ones in the context
+            context = []
+            prompt = "Here is some context : \n" + context + "\n"
+        
+        
         # fill the output_json with the inputs at the correct place
         # scoot where to put the inputs in the outpu_json file
         return output_json

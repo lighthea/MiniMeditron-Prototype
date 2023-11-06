@@ -20,7 +20,7 @@ class Text2TextDataset(Dataset):
         input_item['labels'] = label_item['input_ids']
         return input_item
     
-def fine_tune_model(model, train_data, labels, tokenizer, retriever, epochs =5, batch_size=2, padding=4096):
+def fine_tune_model(model, train_data, labels, tokenizer, retriever, epochs =5, batch_size=2, padding=4096, compute_metrics=None):
     tokenizer.pad_token = tokenizer.eos_token
     train = tokenizer(train_data, truncation=True, padding='max_length', max_length=padding, return_tensors='pt')
     #train = chunk_and_encode(train_data, tokenizer, 1024, 200)
@@ -34,11 +34,14 @@ def fine_tune_model(model, train_data, labels, tokenizer, retriever, epochs =5, 
         logging_dir='./logs',
     )
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
+
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        data_collator= data_collator
+        data_collator= data_collator,
+        compute_metrics=lambda p: compute_metrics(p, model, tokenizer)
     )
 
     trainer.train()    
