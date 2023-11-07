@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def split_jsonl(input_filepath, output_filepath, file):
     with open(input_filepath, 'r') as infile:
         count = 0
@@ -10,6 +11,7 @@ def split_jsonl(input_filepath, output_filepath, file):
 
             with open(output_filepath + f"/guideline_{file}_{count}.json", 'w') as outfile:
                 json.dump(guideline, outfile, indent=4)
+
 
 if __name__ == '__main__':
     filepath = "Guidelines/processed"

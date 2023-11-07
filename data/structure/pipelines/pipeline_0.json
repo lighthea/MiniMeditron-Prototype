@@ -1,5 +1,8 @@
 {
-  "Description of the case " : "",
-  "User" : [
-  ]
+  "prompt": "Enter the case description",
+  "document_structure": {
+    "Description of the case ": "",
+    "User": [
+    ]
+  }
 }
