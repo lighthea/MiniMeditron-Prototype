@@ -20,7 +20,7 @@ class Text2TextDataset(Dataset):
         input_item['labels'] = label_item['input_ids']
         return input_item
     
-def fine_tune_model(model, train_data, labels, tokenizer, retriever, epochs =5, batch_size=2, padding=4096, compute_metrics=None):
+def fine_tune_model(model, train_data, labels, tokenizer, retriever, compute_metrics, epochs=5, batch_size=2, padding=4096):
     tokenizer.pad_token = tokenizer.eos_token
     train = tokenizer(train_data, truncation=True, padding='max_length', max_length=padding, return_tensors='pt')
     #train = chunk_and_encode(train_data, tokenizer, 1024, 200)
