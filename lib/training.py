@@ -70,14 +70,15 @@ class PipelineTrainer:
 
         return fine_tuning_result
 
-    def _train_hf(self, block_to_train, train_dataset, eval_dataset=None, training_args=None):
+    def _train_hf(self, block_to_train, train_dataset, compute_metrics=None, eval_dataset=None, training_args=None):
         block_name = block_to_train.name
 
         # Now get the trainer from the Transformer block and start training
         hf_trainer = block_to_train.get_trainer(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            training_args=training_args
+            training_args=training_args,
+            compute_metrics=compute_metrics
         )
         training_result = hf_trainer.train()
 
@@ -94,7 +95,7 @@ class PipelineTrainer:
             # Assume the dataset is a Hugging Face dataset
             return dataset
 
-    def train(self, block_name, train_dataset, eval_dataset=None, training_args=None):
+    def train(self, block_name, train_dataset, eval_dataset=None, training_args=None, compute_metrics=None):
         block_to_train = self.pipeline.blocks.get(block_name)
         if block_to_train is None:
             raise ValueError(f"Block {block_name} does not exist in the pipeline.")
@@ -114,7 +115,11 @@ class PipelineTrainer:
         if isinstance(block_to_train, OpenAITransformer):
             self._train_openai(block_to_train, processed_train_dataset, model_params=training_args)
         elif isinstance(block_to_train, LocalTransformer):
-            return self._train_hf(block_to_train, processed_train_dataset, processed_eval_dataset, training_args)
+            return self._train_hf(block_to_train,
+                                  processed_train_dataset,
+                                  processed_eval_dataset,
+                                  training_args,
+                                  compute_metrics)
 
 
 def generate_task(guideline_folder, structure_file, model_name, output_dir, use_openai_api=False, examples=None):

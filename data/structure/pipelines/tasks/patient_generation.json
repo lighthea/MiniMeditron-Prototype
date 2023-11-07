@@ -1,5 +1,6 @@
 {
     "description" : "Create a patient description from a structured guideline",
     "type" : "guideline",
-    "prompt" : "INPUT Using the provided structured medical guideline, craft a doctor's description of a patient. The description should detail symptoms from the guideline without explicitly naming the disease. You can enhance the authenticity of the description by incorporating the patient's pain levels related to symptoms, lifestyle, medical history, and any previously applied treatments. While you may introduce supplementary symptoms, they should be relevant and factual and the overall description should remain concise.\n"
+    "prompt" : "INPUT \n\n Using the provided medical guideline, craft a doctor's description of a patient. The description should detail symptoms from the guideline without explicitly naming the disease. You can enhance the authenticity of the description by incorporating the patient's pain levels related to symptoms, lifestyle, medical history, and any previously applied treatments. While you may introduce supplementary symptoms, they should be relevant and factual and the overall description should remain concise.\n"
+
 }

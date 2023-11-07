@@ -64,6 +64,7 @@ class Block(ABC):
         self.next_block_names.append(other.name)
         other.previous_block_names.append(self.name)
         return other
+
     def __hash__(self):
         return hash(self.name)
 
@@ -128,7 +129,7 @@ class LocalTransformer(Transformer):
 
         return prompt
 
-    def get_trainer(self, train_dataset, eval_dataset=None, training_args=None):
+    def get_trainer(self, train_dataset, eval_dataset=None, training_args=None, compute_metrics=None):
         # Assume the `model` attribute holds an instance of a Hugging Face model that's compatible with their Trainer
         # class `training_args` should be an instance of Hugging Face's `TrainingArguments`
 
@@ -139,7 +140,8 @@ class LocalTransformer(Transformer):
             model=self.model,
             args=training_args,
             train_dataset=train_dataset,
-            eval_dataset=eval_dataset
+            eval_dataset=eval_dataset,
+            compute_metrics=compute_metrics
         )
 
         return trainer

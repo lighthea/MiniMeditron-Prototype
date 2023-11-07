@@ -21,6 +21,7 @@ Model4 = LocalTransformer(name="Model 4 : Report maker",
 
 # pipeline = Pipeline(Model1 > [GuidelineRetriever > Model2, Model2 > Model3 > Model4])
 _ = Model1 > Model2 > Model3 > Model4
+
 pipeline = Pipeline([Model1, Model2, Model3, Model4])
 print(pipeline("Patient has a headache and a fever."))
 
