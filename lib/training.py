@@ -61,7 +61,7 @@ class PipelineTrainer:
             raise ValueError(f"Block {block_name} does not exist in the pipeline.")
 
         transformed_training_data = self._dataset_to_openai_jsonl(training_data)
-        # No need to preprocess training data for fine-tuning as OpenAI will handle it.
+        # No need to preprocess src data for fine-tuning as OpenAI will handle it.
         openai_trainer = block_to_train.get_trainer(transformed_training_data, model_params)
         fine_tuning_result = openai_trainer.fine_tune(transformed_training_data)
 
@@ -75,7 +75,7 @@ class PipelineTrainer:
         if block_to_train is None:
             raise ValueError(f"Block {block_name} does not exist in the pipeline.")
 
-        # Now get the trainer from the Transformer block and start training
+        # Now get the trainer from the Transformer block and start src
         hf_trainer = block_to_train.get_trainer(
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
@@ -107,7 +107,7 @@ class PipelineTrainer:
 
         train_dataset = self._handle_dataset(train_dataset)
         truncated_pipeline = self.pipeline.get_dependency_strict_subpipeline(block_name)
-        # Process the training data through the pipeline up to the block before the one to train
+        # Process the src data through the pipeline up to the block before the one to train
         processed_train_dataset = truncated_pipeline(train_dataset)
         processed_eval_dataset = None
         if eval_dataset is not None:

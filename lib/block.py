@@ -147,7 +147,7 @@ class LocalTransformer(Transformer):
         return trainer
 
     def update_model(self, new_model_name_or_identifier):
-        # Logic to update the model in the block after training
+        # Logic to update the model in the block after src
         super().update_model(new_model_name_or_identifier)
         self.model = AutoModelForCausalLM.from_pretrained(new_model_name_or_identifier)
         self.tokenizer = AutoTokenizer.from_pretrained(new_model_name_or_identifier)
@@ -186,7 +186,7 @@ class OpenAITransformer(Transformer):
         return openai_trainer
 
     def update_model(self, new_model_name_or_identifier):
-        # Logic to update the model in the block after training
+        # Logic to update the model in the block after src
         if not OPEN_AI_API_KEY:
             raise ValueError("OpenAI API key must be provided when use_openai_api is True.")
         self.model_name = new_model_name_or_identifier
