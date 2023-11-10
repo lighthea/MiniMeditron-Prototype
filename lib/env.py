@@ -1,3 +1,3 @@
 import os
 
-OPEN_AI_API_KEY = os.environ.get('OPEN_AI_API_KEY')
+OPEN_AI_API_KEY = "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"
