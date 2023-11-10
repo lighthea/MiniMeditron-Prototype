@@ -3,3 +3,4 @@
 /data/raw/
 /Guidelines
 /data/knowledge_database/
+**/__pycache__/**
