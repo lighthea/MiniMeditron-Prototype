@@ -49,7 +49,7 @@ class Pipeline:
         # Populate in_degree counts
         for block in blocks:
             if block.previous_block_names:
-                in_degree[block] += len(block.previous_block_names) - 1
+                in_degree[block] += len(block.previous_block_names)
 
         # Create a set of all blocks with no incoming edges (start nodes for the sort)
         start_blocks = [block for block in block_map.values() if in_degree[block] == 0]

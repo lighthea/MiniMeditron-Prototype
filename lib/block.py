@@ -106,7 +106,7 @@ class LocalTransformer(Transformer):
         super().__init__(name, output_json, model_name)
 
         self.model_name = model_name
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         self.examples = examples or []

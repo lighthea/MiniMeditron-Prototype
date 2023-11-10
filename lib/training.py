@@ -72,6 +72,8 @@ class PipelineTrainer:
 
     def _train_hf(self, block_to_train, train_dataset, compute_metrics=None, eval_dataset=None, training_args=None):
         block_name = block_to_train.name
+        if block_to_train is None:
+            raise ValueError(f"Block {block_name} does not exist in the pipeline.")
 
         # Now get the trainer from the Transformer block and start training
         hf_trainer = block_to_train.get_trainer(
