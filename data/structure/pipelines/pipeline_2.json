@@ -1,8 +1,9 @@
 {
-  "Condition list" : [
-      {
-        "Name": "",
-        "Certainty": ""
-      }
+  "prompt" : "Diagnose the potential conditions for the patient using the information in INPUT in the format of OUTPUT.",
+  "document_structure" : {
+  "Condition list": [
+    {
+      "Name": ""
+    }
   ]
-}
+}}

@@ -1,11 +1,13 @@
 {
-  "Treatment list" : [
-      {
-        "Name": "",
-        "Certainty": "",
-        "Duration": "",
-        "Frequency": "",
-        "Additional information": ""
-      }
+  "prompt" : "Decide a treatment the potential conditions for the patient using the information in INPUT in the format of OUTPUT.",
+ "document_structure" :{
+  "Treatment list": [
+    {
+      "Name": "",
+      "Certainty": "",
+      "Duration": "",
+      "Frequency": "",
+      "Additional information": ""
+    }
   ]
-}
+}}

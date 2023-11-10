@@ -1,3 +1,4 @@
-{
-  "Description of the treatments " : ""
-}
+{  "prompt" : "Complete the report OUTPUT on the treatments to use given INPUT",
+"document_structure" : {
+  "Description of the treatments ": ""
+}}
