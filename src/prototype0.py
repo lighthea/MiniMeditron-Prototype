@@ -12,19 +12,24 @@ from lib.metrics import *
 from lib.pipeline import Pipeline
 from lib.block import LocalTransformer, Selector
 
-transformer1 = LocalTransformer(name="Patient Structuriser",
-                                model_name="mistralai/Mistral-7B-v0.1",
-                                output_json="data/structure/pipelines/pipeline_1.json")
+list = ['cholera', 'plague', 'covid']
+retriever = Selector(resources=list, name="Retriever")
 
-selector = Selector(resources="../../Guidelines/processed",
-                    name="Resource Selector")
+# model_1 = LocalTransformer(name="Patient Structuriser", output_json="data/structure/pipelines/pipeline_1.json")
 
-transformer2 = LocalTransformer(name="Diagnoser",
-                                model_name="allenai/longformer-base-4096",
-                                output_json="../data/structure/pipelines/pipeline_2.json")
+# transformer1 = LocalTransformer(name="Patient Structuriser",
+#                                 model_name="mistralai/Mistral-7B-v0.1",
+#                                 output_json="data/structure/pipelines/pipeline_1.json")
 
-_ = transformer1 > selector > transformer2
-pipeline = Pipeline(transformer1, selector, transformer2)
+# selector = Selector(resources="../../Guidelines/processed",
+#                     name="Resource Selector")
 
-# Example use
-result = pipeline("Patient has a headache and a fever.")
+# transformer2 = LocalTransformer(name="Diagnoser",
+#                                 model_name="allenai/longformer-base-4096",
+#                                 output_json="../data/structure/pipelines/pipeline_2.json")
+
+# _ = transformer1 > selector > transformer2
+# pipeline = Pipeline(transformer1, selector, transformer2)
+
+# # Example use
+# result = pipeline("Patient has a headache and a fever.")

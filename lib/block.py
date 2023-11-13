@@ -8,6 +8,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from transformers import TrainingArguments, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM
 
+from peft import LoraConfig, TaskType, get_peft_model
+
+
+
 from lib.env import OPEN_AI_API_KEY
 
 
@@ -105,10 +109,16 @@ class LocalTransformer(Transformer):
                  examples: list[(str, str)] = None):
         super().__init__(name, output_json, model_name)
 
+
         self.model_name = model_name
-        self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+        peft_config = LoraConfig(task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1)
+
+        self.model = get_peft_model(model, peft_config)
+        self.model.print_trainable_parameters()
+        
         self.examples = examples or []
 
     def forward(self, *inputs):
@@ -229,6 +239,10 @@ class SimpleRetriever:
 
     def save(self):
         # Saves the TF-IDF vectorizer and the matrix to a path
+        if not os.path.exists(self.path):        
+            # create the directory
+            directory = os.path.dirname(self.path)
+            os.makedirs(directory)
         numpy.save(self.path, self.matrix.toarray())
 
     def load(self):
