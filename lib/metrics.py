@@ -7,24 +7,23 @@ import torch.nn.functional as F
 
 # PRECISION METRIC
 
-def extract_conditions(json_file):
+def extract_condition(json_file):
     """
     Extracts the conditions from the json file
     """
     parsed_json = json.loads(json_file)
-    extracted_conditions = parsed_json["output_structure"]["Names of Conditions"]
-    return extracted_conditions
+    extracted_condition = parsed_json["document_structure"]["Condition"]
+    return extracted_condition
 
 
-def exact_matching(ground_truth, extracted_conditions):
+def exact_matching(ground_truth, extracted_condition):
     """
     Returns the positions of the exact matches between the ground truth and the extracted conditions
     """
-    matching_positions = []
-    for idx, condition in enumerate(extracted_conditions):
-        if condition == ground_truth:
-            matching_positions.append(idx)
-    return matching_positions
+    if extracted_condition == ground_truth:
+        return 0 # the loss is zero
+    else:
+        return 1 # the loss is maximal as it's wrong
 
 
 def fuzzy_matching(ground_truth, extracted_conditions, threshold=80):
@@ -40,6 +39,26 @@ def fuzzy_matching(ground_truth, extracted_conditions, threshold=80):
             matching_positions.append((idx, score))
 
     return fuzzy_scores, matching_positions
+
+def fuzzy_loss(ground_truth, extracted_condition):
+    """
+    Returns the fuzzy scores in a loss form
+    """
+    score = fuzz.ratio(extracted_condition, ground_truth)
+    normalized_score = score / 100 
+    return (1 - normalized_score)
+
+def combined_loss(ground_truth, json_output, exact_weight=0.5, fuzzy_weight=0.5):
+    """
+    Returns a combined version loss between fuzzy and exact matching.
+    """
+    extracted_condition = extract_condition(json_output)
+    exact_matches = exact_matching(ground_truth, extracted_condition)
+    fuzzy_loss_value = fuzzy_loss(ground_truth, extracted_condition)
+    # weighted combination of both losses
+    combined_loss_value = exact_weight * exact_matches + fuzzy_weight * fuzzy_loss_value
+    return combined_loss_value
+
 
 
 # HANDCRAFTED METRICS

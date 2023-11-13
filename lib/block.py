@@ -4,9 +4,14 @@ import json
 import numpy
 import openai
 import requests
+import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from transformers import TrainingArguments, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM
+
+from peft import LoraConfig, TaskType, get_peft_model
+
+
 
 from lib.env import OPEN_AI_API_KEY
 
@@ -105,10 +110,16 @@ class LocalTransformer(Transformer):
                  examples: list[(str, str)] = None):
         super().__init__(name, output_json, model_name)
 
+
         self.model_name = model_name
-        self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+        peft_config = LoraConfig(task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1)
+
+        self.model = get_peft_model(model, peft_config)
+        self.model.print_trainable_parameters()
+        
         self.examples = examples or []
 
     def forward(self, *inputs):
@@ -198,6 +209,7 @@ class SimpleRetriever:
         # Initialises TF-IDF from scikit-learn with the resources
         self.vectorizer = TfidfVectorizer()
         self.path = f"data/external/tfidf_{name}.npy"
+        self.name = name
         if os.path.exists(self.path):
             self.load()
         else:
@@ -216,8 +228,6 @@ class SimpleRetriever:
         else:
             raise TypeError("Resources must be a list of strings or a path to a directory.")
 
-        self.name = name
-
     def retrieve(self, query, top_n=5):
         # Uses the TF-IDF vectorizer to retrieve the top_n most relevant resources
         # Compute cosine similarity between the new doc and all existing docs
@@ -229,11 +239,26 @@ class SimpleRetriever:
 
     def save(self):
         # Saves the TF-IDF vectorizer and the matrix to a path
+        directory = os.path.dirname(self.path)
+        print('DIRECTORYYYY : ', directory)
+        if not os.path.exists(self.path):        
+            # create the directory
+            os.makedirs(directory)
         numpy.save(self.path, self.matrix.toarray())
+
+        vectorizer_path = f"{directory}/{self.name}_vectorizer.pkl"
+
+        # Save the state of the vectorizer
+        with open(vectorizer_path, "wb") as f:
+            pickle.dump(self.vectorizer, f)
 
     def load(self):
         # Loads the TF-IDF vectorizer and the matrix from a path
         self.matrix = numpy.load(self.path)
+        directory = os.path.dirname(self.path)
+        vectorizer_path = f"{directory}/{self.name}_vectorizer.pkl"
+        with open(vectorizer_path, "rb") as f:
+            self.vectorizer = pickle.load(f)
 
 
 class Selector(Block):

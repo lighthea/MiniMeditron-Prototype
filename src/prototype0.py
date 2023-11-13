@@ -12,19 +12,33 @@ from lib.metrics import *
 from lib.pipeline import Pipeline
 from lib.block import LocalTransformer, Selector
 
-transformer1 = LocalTransformer(name="Patient Structuriser",
-                                model_name="mistralai/Mistral-7B-v0.1",
-                                output_json="data/structure/pipelines/pipeline_1.json")
+diseases_list = [
+    'Cholera', 'Plague', 'COVID-19', 'Influenza', 'Tuberculosis', 
+    'Malaria', 'Ebola', 'Zika Virus', 'Dengue Fever', 'Lyme Disease', 
+    'HIV/AIDS', 'Hepatitis', 'Measles', 'Chickenpox', 'Asthma', 
+    'Diabetes', 'Cancer', 'Heart Disease', 'Alzheimer', 'Parkinson'
+]
+retriever = Selector(resources=diseases_list, name="Retriever")
 
-selector = Selector(resources="../../Guidelines/processed",
-                    name="Resource Selector")
+answer = retriever.forward("chickenpox cancer fever")
 
-transformer2 = LocalTransformer(name="Diagnoser",
-                                model_name="allenai/longformer-base-4096",
-                                output_json="../data/structure/pipelines/pipeline_2.json")
+print(answer)
 
-_ = transformer1 > selector > transformer2
-pipeline = Pipeline(transformer1, selector, transformer2)
+# model_1 = LocalTransformer(name="Patient Structuriser", output_json="data/structure/pipelines/pipeline_1.json")
 
-# Example use
-result = pipeline("Patient has a headache and a fever.")
+# transformer1 = LocalTransformer(name="Patient Structuriser",
+#                                 model_name="mistralai/Mistral-7B-v0.1",
+#                                 output_json="data/structure/pipelines/pipeline_1.json")
+
+# selector = Selector(resources="../../Guidelines/processed",
+#                     name="Resource Selector")
+
+# transformer2 = LocalTransformer(name="Diagnoser",
+#                                 model_name="allenai/longformer-base-4096",
+#                                 output_json="../data/structure/pipelines/pipeline_2.json")
+
+# _ = transformer1 > selector > transformer2
+pipeline = Pipeline([retriever])
+
+# # Example use
+# result = pipeline("Patient has a headache and a fever.")

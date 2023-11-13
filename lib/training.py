@@ -74,6 +74,9 @@ class PipelineTrainer:
         block_name = block_to_train.name
         if block_to_train is None:
             raise ValueError(f"Block {block_name} does not exist in the pipeline.")
+        
+        # train_dataset = block_to_train.tokenizer(train_dataset)
+        # eval_dataset = block_to_train.tokenizer(eval_dataset)
 
         # Now get the trainer from the Transformer block and start src
         hf_trainer = block_to_train.get_trainer(
