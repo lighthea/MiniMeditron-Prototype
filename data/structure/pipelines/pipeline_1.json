@@ -1,5 +1,5 @@
 {
-  "prompt" : "Some context : INPUT\\n Fill the following structure accordingly : \\n OUTPUT. Don't change it.\\nIf the information is not given, don't write anything, leave it as an empty section.\\nIf an information is true for multiple symptoms, repeat the information.\\nOnly answer with the filled structure.\\n ",
+  "prompt" : "Some context : INPUT\\n Fill the following structure accordingly : \\n OUTPUT. Don't change it.\\nIf the information is not given, don't write anything, leave it as an empty section.\\nIf an information is true for multiple symptoms, repeat the information.\\nOnly answer with the filled structure.\\n Do not wrap the structure with '''json '''",
   "document_structure" : {
   "symptoms": [
     {
