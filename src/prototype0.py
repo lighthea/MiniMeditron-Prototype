@@ -12,8 +12,17 @@ from lib.metrics import *
 from lib.pipeline import Pipeline
 from lib.block import LocalTransformer, Selector
 
-list = ['cholera', 'plague', 'covid']
-retriever = Selector(resources=list, name="Retriever")
+diseases_list = [
+    'Cholera', 'Plague', 'COVID-19', 'Influenza', 'Tuberculosis', 
+    'Malaria', 'Ebola', 'Zika Virus', 'Dengue Fever', 'Lyme Disease', 
+    'HIV/AIDS', 'Hepatitis', 'Measles', 'Chickenpox', 'Asthma', 
+    'Diabetes', 'Cancer', 'Heart Disease', 'Alzheimer', 'Parkinson'
+]
+retriever = Selector(resources=diseases_list, name="Retriever")
+
+answer = retriever.forward("chickenpox cancer fever")
+
+print(answer)
 
 # model_1 = LocalTransformer(name="Patient Structuriser", output_json="data/structure/pipelines/pipeline_1.json")
 
@@ -29,7 +38,7 @@ retriever = Selector(resources=list, name="Retriever")
 #                                 output_json="../data/structure/pipelines/pipeline_2.json")
 
 # _ = transformer1 > selector > transformer2
-# pipeline = Pipeline(transformer1, selector, transformer2)
+pipeline = Pipeline([retriever])
 
 # # Example use
 # result = pipeline("Patient has a headache and a fever.")
