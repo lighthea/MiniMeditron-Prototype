@@ -114,7 +114,6 @@ trainer = SFTTrainer(
         max_steps=1000,
         learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
         logging_steps=50,
-        bf16=True,
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
         save_steps=50,  # Save checkpoints every 50 steps
