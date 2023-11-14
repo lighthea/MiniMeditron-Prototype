@@ -32,11 +32,13 @@ def retrieve_top_k_guidelines(query, tf_idf_matrix, vectorizer, data_folder, k=5
 def return_guidelines(top_indices, data_folder):
     guidelines = [p.join(x[0],file_path) for x in os.walk(data_folder) for file_path in x[2]]
     top_guidelines = [guidelines[index] for index in top_indices]
+    guidelines = ""
     for guide in top_guidelines:
         with open(guide, 'r') as f:
-            yield f.read()
-
-def create_matrix(tf_idf_path):
+            guidelines += f.read()
+            guidelines += '\n'
+    return guidelines
+def create_matrix(tf_idf_path, data_folder):
     if not p.isfile(p.join(tf_idf_path, "tfidf.pkl")):
         vectorizer = TfidfVectorizer(stop_words='english')
         tf_idf_matrix = create_tf_idf(data_folder, vectorizer)

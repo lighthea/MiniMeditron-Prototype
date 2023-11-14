@@ -3,6 +3,7 @@ import re
 from fuzzywuzzy import fuzz
 import torch
 import torch.nn.functional as F
+from transformers import EvalPrediction
 
 
 # PRECISION METRIC
@@ -16,11 +17,14 @@ def extract_condition(json_file):
     return extracted_condition
 
 
-def exact_matching(ground_truth, extracted_condition):
+def exact_matching(p: EvalPrediction):
     """
     Returns the positions of the exact matches between the ground truth and the extracted conditions
     """
-    if extracted_condition == ground_truth:
+    input_ids, label = p
+    extracted_condition = extract_condition(input_ids)
+    
+    if extracted_condition == label:
         return 0 # the loss is zero
     else:
         return 1 # the loss is maximal as it's wrong
@@ -136,3 +140,8 @@ def tensor_distance(tensor1, tensor2, distance_type="L2"):
         distance = torch.norm(tensor1 - tensor2, p=3)
 
     return distance
+
+def compute_metrics(p:EvalPrediction):
+    logits, labels = p
+    zipped = zip(logits, labels)
+    return [exact_matching(logits, labels) for (logit, label) in zipped]

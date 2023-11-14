@@ -8,11 +8,8 @@ import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from transformers import TrainingArguments, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoModelForSeq2SeqLM
-
-from peft import LoraConfig, TaskType, get_peft_model
-
-
-
+from peft import prepare_model_for_kbit_training, get_peft_model
+from trl import SFTTrainer
 from lib.env import OPEN_AI_API_KEY
 
 
@@ -107,12 +104,21 @@ class Transformer(Block):
 
 class LocalTransformer(Transformer):
     def __init__(self, name: str, output_json: str, model_name: str = "google/flan-t5-small",
-                 examples: list[(str, str)] = None):
+                 examples: list[(str, str)] = None, bnb_config = None, ia3_config = None, accelerator = None):
         super().__init__(name, output_json, model_name)
 
 
         self.model_name = model_name
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        if bnb_config == None:
+            self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        else:
+            self.model = prepare_model_for_kbit_training(AutoModelForCausalLM.from_pretrained(model_name, 
+                                                                                              quantization_config = bnb_config))
+        if ia3_config != None:
+            self.model = get_peft_model(self.model, ia3_config)
+        if accelerator != None:
+            self.model = accelerator.prepare_model(self.model)
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         peft_config = LoraConfig(task_type=TaskType.SEQ_2_SEQ_LM, inference_mode=False, r=8, lora_alpha=32, lora_dropout=0.1)
@@ -140,20 +146,32 @@ class LocalTransformer(Transformer):
 
         return prompt
 
-    def get_trainer(self, train_dataset, eval_dataset=None, training_args=None, compute_metrics=None):
+    def get_trainer(self, train_dataset, eval_dataset=None, training_args=None, compute_metrics=None, ia3_config = False):
         # Assume the `model` attribute holds an instance of a Hugging Face model that's compatible with their Trainer
         # class `training_args` should be an instance of Hugging Face's `TrainingArguments`
-
+     
+        
         if training_args is None:
             training_args = TrainingArguments(output_dir='./results', num_train_epochs=3)
-
-        trainer = Trainer(
-            model=self.model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            compute_metrics=compute_metrics
-        )
+        if ia3_config is None:
+            trainer = Trainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=eval_dataset,
+                compute_metrics=compute_metrics
+            )
+        else:
+            trainer = SFTTrainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=eval_dataset,
+                dataset_text_field="text",
+                peft_config=ia3_config,
+                compute_metrics=compute_metrics
+            )
+                
 
         return trainer
 

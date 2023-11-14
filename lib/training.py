@@ -83,7 +83,8 @@ class PipelineTrainer:
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             training_args=training_args,
-            compute_metrics=compute_metrics
+            compute_metrics=compute_metrics,
+            ia3_config = block_to_train.ia3_config
         )
         training_result = hf_trainer.train()
 
