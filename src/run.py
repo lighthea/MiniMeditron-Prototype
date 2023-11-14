@@ -4,7 +4,7 @@ from accelerate import FullyShardedDataParallelPlugin, Accelerator
 from peft import get_peft_model
 import torch
 from torch.distributed.fsdp import FullStateDictConfig
-from torch.distributed.fsdp.api import FullOptimStateDictConfig
+from torch.distributed.fsdp import FullOptimStateDictConfig
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 import wandb, os
 from peft import IA3Config
