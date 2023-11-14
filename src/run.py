@@ -96,15 +96,9 @@ ia3_config = IA3Config(
     feedforward_modules=["down_proj"]
 )
 model = get_peft_model(model, ia3_config)
-
-trainer = SFTTrainer(
-    model,
-    train_dataset=dataset,
-    eval_dataset=dataset.select(range(100)),
-    dataset_text_field="text",
-    peft_config=ia3_config,
-    compute_metrics=exact_matching,
-    args=TrainingArguments(
+# Check if gpu supports bf16
+if torch.cuda.is_bf16_supported():
+    train_args = TrainingArguments(
         output_dir="./test",
         num_train_epochs=2,
         warmup_steps=5,
@@ -115,6 +109,7 @@ trainer = SFTTrainer(
         learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
         logging_steps=50,
         optim="paged_adamw_8bit",
+        bf16=True,
         save_strategy="steps",  # Save the model checkpoint every logging step
         save_steps=50,  # Save checkpoints every 50 steps
         evaluation_strategy="steps",  # Evaluate the model every logging step
@@ -124,6 +119,37 @@ trainer = SFTTrainer(
         run_name="proto0-1",
         load_best_model_at_end=True,
         logging_dir="./logs")
+else:
+    train_args = TrainingArguments(
+        output_dir="./test",
+        num_train_epochs=2,
+        warmup_steps=5,
+        per_device_train_batch_size=2,
+        gradient_checkpointing=True,
+        gradient_accumulation_steps=4,
+        max_steps=1000,
+        learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
+        logging_steps=50,
+        optim="paged_adamw_8bit",
+        fp16=True,
+        save_strategy="steps",  # Save the model checkpoint every logging step
+        save_steps=50,  # Save checkpoints every 50 steps
+        evaluation_strategy="steps",  # Evaluate the model every logging step
+        eval_steps=50,  # Evaluate and save checkpoints every 50 steps
+        do_eval=True,
+        report_to="wandb",
+        run_name="proto0-1",
+        load_best_model_at_end=True,
+        logging_dir="./logs")
+
+trainer = SFTTrainer(
+    model,
+    train_dataset=dataset,
+    eval_dataset=dataset.select(range(100)),
+    dataset_text_field="text",
+    peft_config=ia3_config,
+    compute_metrics=exact_matching,
+    args=train_args
 )
 
 trainer.train()
