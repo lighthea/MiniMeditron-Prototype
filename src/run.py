@@ -85,7 +85,7 @@ if not torch.cuda.is_bf16_supported():
     bnb_config.bnb_4bit_compute_dtype = torch.float16
 
 base_model_id = "HuggingFaceH4/zephyr-7b-beta"
-model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
+model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config, use_flash_attention_2=True)
 
 model.gradient_checkpointing_enable()
 model = prepare_model_for_kbit_training(model)
@@ -127,6 +127,7 @@ train_args = TrainingArguments(
     eval_steps=5,  # Evaluate and save checkpoints every 50 steps
     do_eval=True,
     report_to="wandb",
+    eval_accumulation_steps=2,
     run_name="proto0-1",
     load_best_model_at_end=True,
     logging_dir="./logs")
