@@ -1,16 +1,15 @@
 import sys
 
-from peft import LoraConfig, get_peft_model
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from accelerate import FullyShardedDataParallelPlugin, Accelerator
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from peft import get_peft_model
 import torch
+from torch.distributed.fsdp import FullStateDictConfig
+from torch.distributed.fsdp.api import FullOptimStateDictConfig
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 import wandb, os
 from peft import IA3Config
 from peft import prepare_model_for_kbit_training
-from datasets import load_dataset
 from trl import SFTTrainer
-from peft import LoraConfig
 from transformers import TrainingArguments
 from datasets import Dataset
 from tqdm import tqdm
@@ -19,9 +18,16 @@ sys.path.append(os.path.join(current_dir, '..'))
 
 from scripts.tf_idf import *
 from lib.metrics import *
-from lib.metrics import compute_metrics
 
 wandb.login(key="a51dc03985c11e74e9ef700cd3093e6c78636177")
+
+fsdp_plugin = FullyShardedDataParallelPlugin(
+    state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+    optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+)
+
+
+accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
 
 wandb_project = "minimed-finetune-proto0"
 if len(wandb_project) > 0:
@@ -84,6 +90,7 @@ model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=
 model.gradient_checkpointing_enable()
 model = prepare_model_for_kbit_training(model)
 
+
 ia3_config = IA3Config(
     task_type="CAUSAL_LM",
     target_modules=[
@@ -99,6 +106,9 @@ ia3_config = IA3Config(
     feedforward_modules=["down_proj"]
 )
 model = get_peft_model(model, ia3_config)
+print(model.print_trainable_parameters())
+model = accelerator.prepare_model(model)
+
 # Check if gpu supports bf16
 train_args = TrainingArguments(
     output_dir="./test",
