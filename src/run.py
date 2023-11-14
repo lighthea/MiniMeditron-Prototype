@@ -75,6 +75,8 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.bfloat16
 )
+if not torch.cuda.is_bf16_supported():
+    bnb_config.bnb_4bit_compute_dtype = torch.float16
 
 base_model_id = "HuggingFaceH4/zephyr-7b-beta"
 model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
@@ -106,7 +108,6 @@ train_args = TrainingArguments(
     gradient_checkpointing=True,
     gradient_accumulation_steps=4,
     max_steps=1000,
-    use_cache=False,
     learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
     logging_steps=50,
     optim="paged_adamw_8bit",
@@ -119,9 +120,11 @@ train_args = TrainingArguments(
     run_name="proto0-1",
     load_best_model_at_end=True,
     logging_dir="./logs")
+
 if torch.cuda.is_bf16_supported():
     train_args.bf16 = True
     train_args.bf16_full_eval = False
+
 else:
     train_args.fp16 = True
     train_args.fp16_full_eval = True
