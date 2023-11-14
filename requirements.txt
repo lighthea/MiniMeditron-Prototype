@@ -2,12 +2,15 @@ numpy
 openai
 requests==2.28.2
 scikit-learn
+packaging
+ninja
 transformers @ git+https://github.com/huggingface/transformers.git@main
 peft
 trl[peft]
 bitsandbytes
 loralib
 wandb
+flash-attn
 fuzzywuzzy
 datasets
 wandb

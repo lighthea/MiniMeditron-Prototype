@@ -85,7 +85,7 @@ if not torch.cuda.is_bf16_supported():
     bnb_config.bnb_4bit_compute_dtype = torch.float16
 
 base_model_id = "HuggingFaceH4/zephyr-7b-beta"
-model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config, use_flash_attention_2=True)
+model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
 
 model.gradient_checkpointing_enable()
 model = prepare_model_for_kbit_training(model)
