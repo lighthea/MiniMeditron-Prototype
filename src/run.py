@@ -13,6 +13,7 @@ from trl import SFTTrainer
 from peft import LoraConfig
 from transformers import TrainingArguments
 from datasets import Dataset
+from tqdm import tqdm
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
@@ -33,7 +34,7 @@ data_folder = current_dir + "/../data/structured_patients"
 guideline_folder = current_dir + "/../data/all_split_structured_guidelines"
 tf_idf_path = current_dir + "/../data/TF-IDF"
 folder_path = current_dir + "/../data/structured_patients/"
-for files in os.listdir(folder_path):
+for files in tqdm(os.listdir(folder_path)):
     if files.endswith(".jsonl"):
         # chunk the file into multiple json files
         with open(folder_path + files) as f:
@@ -42,7 +43,7 @@ for files in os.listdir(folder_path):
                     json.dump(json.loads(line), outfile)
 dataset = []
 
-for file in os.listdir(folder_path):
+for file in tqdm(os.listdir(folder_path)):
     if file.endswith(".json"):
         # read the json file
         with open(folder_path + file) as f:
