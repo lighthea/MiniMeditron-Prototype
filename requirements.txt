@@ -10,7 +10,6 @@ trl[peft]
 bitsandbytes
 loralib
 wandb
-flash-attn
 fuzzywuzzy
 datasets
 wandb

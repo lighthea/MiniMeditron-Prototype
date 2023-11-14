@@ -8,7 +8,7 @@ from transformers import EvalPrediction
 
 # PRECISION METRIC
 
-def extract_condition(json_file):
+def extract_condition(json_file: str):
     """
     Extracts the conditions from the json file
     """
@@ -21,6 +21,7 @@ def exact_matching(p: EvalPrediction):
     """
     Returns the positions of the exact matches between the ground truth and the extracted conditions
     """
+    print(p)
     input_ids, label = p
     extracted_condition = extract_condition(input_ids)
     
