@@ -21,8 +21,9 @@ def exact_matching(p: EvalPrediction):
     """
     Returns the positions of the exact matches between the ground truth and the extracted conditions
     """
-    print(p)
+
     input_ids, label = p
+    print(input_ids, label)
     extracted_condition = extract_condition(input_ids)
     
     if extracted_condition == label:
