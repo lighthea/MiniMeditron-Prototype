@@ -51,5 +51,5 @@ def batch_bm25(dataset: Dataset, guideline_folder: str, n: int = 3):
     print("Initializing BM25 model")
     bm25 = init_bm25(guideline_folder)
     guidelines = list(map(lambda x: str(x), yield_structured_obj(guideline_folder)))
-    dataset.map(lambda x: {"context": retrieve_n_best_guidelines(x["query_column"], bm25, guidelines, n=n)})
+    dataset.map(lambda x: {"context": retrieve_n_best_guidelines(x["text"], bm25, guidelines, n=n)})
     return dataset
