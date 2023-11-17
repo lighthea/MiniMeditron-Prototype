@@ -103,7 +103,8 @@ def repair_json(json_string):
         return f' "{value}"{match.group(2)}'
 
     # Use regular expression to replace unquoted values
-    repaired_json_string = re.sub(pattern, replace_with_quotes, json_string)
-
-    return repaired_json_string.replace("'s", "s").replace("'", '"')
+    json_string = re.sub(pattern, replace_with_quotes, json_string)
+    repaired_json_string = re.sub(r',\s*([\]}])', r'\1', json_string)
+    return (repaired_json_string.replace("'s", "s")
+            .replace("'", '"'))
 
