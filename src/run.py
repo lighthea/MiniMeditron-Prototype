@@ -1,7 +1,7 @@
 import sys
 
 from accelerate import FullyShardedDataParallelPlugin, Accelerator
-from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
+from torch.distributed.fsdp import FullOptimStateDictConfig, FullStateDictConfig
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction
 import wandb, os, torch, json
 from tqdm import tqdm
