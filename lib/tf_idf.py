@@ -42,8 +42,9 @@ def init_bm25(corpus_folder_path: str) -> BM25Okapi:
 
 def retrieve_n_best_guidelines(query: str, bm25: BM25Okapi, guidelines: list[str], n: int = 3):
     # Loads the JSON string into a Python dictionary
+    query = repair_json(str(query))
     try:
-        data = json.loads(repair_json(str(query)))
+        data = json.loads(query)
     except json.JSONDecodeError as e:
         # Handle the case where the input is not a valid JSON string
         print(query)
