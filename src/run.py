@@ -187,7 +187,7 @@ def main():
 
     # Load the dataset
     dataset = load_dataset(config, tokenizer)
-    print(dataset)
+    print(dataset["train"][0])
     # Randomize the dataset and split into train and validation sets
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
