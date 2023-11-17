@@ -29,6 +29,8 @@ def blanket(config: dict) -> str:
 
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     predictions, label_ids = eval_pred
+    print(predictions)
+    print(label_ids)
     decoded_prediction = tokenizer.batch_decode(predictions, skip_special_tokens=True)
     decoded_labels = tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
