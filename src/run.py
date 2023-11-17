@@ -192,7 +192,7 @@ def main():
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
-    compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
+    compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer, blanket=blanket(config))
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
