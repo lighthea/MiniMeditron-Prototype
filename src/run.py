@@ -78,10 +78,10 @@ def init_configs(bf16_support: bool):
 def load_dataset(config: dict) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
-    if os.path.exists(config['tokenized_data_path']):
-        print("Loading tokenized dataset")
+    if os.path.exists(config['processed_data_path']):
+        print("Loading processed dataset")
         # Load the tokenized dataset
-        dataset = Dataset.load_from_disk(config['tokenized_data_path'])
+        dataset = Dataset.load_from_disk(config['processed_data_path'])
         return dataset
 
     # For each patient, retrieve the top k guidelines
