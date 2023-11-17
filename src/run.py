@@ -29,12 +29,10 @@ def blanket(config: dict) -> str:
 
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     predictions, label_ids = eval_pred
-    print(predictions)
-    print(label_ids)
-    decoded_prediction = tokenizer.batch_decode(predictions, skip_special_tokens=True)
-    decoded_labels = tokenizer.batch_decode(label_ids, skip_special_tokens=True)
+    decoded_prediction =[tokenizer.decode(prediction, skip_special_tokens=True) for prediction in predictions]
+    decoded_labels = [blanket.replace("LABEL", tokenizer.batch_decode(label_id, skip_special_tokens=True)) for label_id in label_ids]
 
-    decoded_labels = [blanket.replace("LABEL", str(label)) for label in decoded_labels]
+    print(decoded_prediction[0])
     # Calculate exact match
     results = exact_matching.compute(predictions=decoded_prediction, references=decoded_labels)
     return results
