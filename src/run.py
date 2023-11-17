@@ -29,7 +29,7 @@ def blanket(config: dict) -> str:
 
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     predictions, label_ids = eval_pred
-    decoded_prediction =[tokenizer.decode(prediction, skip_special_tokens=True) for prediction in predictions]
+    decoded_prediction = [tokenizer.decode(prediction, skip_special_tokens=True) for prediction in predictions]
     decoded_labels = [blanket.replace("LABEL", tokenizer.batch_decode(label_id, skip_special_tokens=True)) for label_id in label_ids]
 
     print(decoded_prediction[0])
@@ -202,7 +202,7 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        compute_metrics=compute_metrics_with_tokenizer,
+        #compute_metrics=compute_metrics_with_tokenizer,
     )
 
     trainer.train()
