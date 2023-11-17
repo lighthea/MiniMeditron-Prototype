@@ -107,14 +107,13 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
 
     # Tokenize the dataset
     def transform_example(example):
-        tokenized_output = tokenizer.apply_chat_template([
+        tokenized_output = {"input_ids": tokenizer.apply_chat_template([
             {"role": "user", "content": example["query"]},
             {"role": "assistant", "content": example["labels"]}
-        ], tokenize=True, padding="max_length", add_generation_prompt=False, truncation=True)
+        ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True)}
 
-        print(tokenized_output)
         # Convert tensor output to a dictionary format suitable for the dataset
-        return {key: value for key, value in tokenized_output.items()}
+        return tokenized_output
 
     dataset = dataset.map(transform_example,remove_columns=["query", "labels"])
 
