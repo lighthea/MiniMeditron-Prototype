@@ -107,10 +107,10 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
 
     # Tokenize the dataset
     def transform_example(example):
-        tokenized_output = {"input_ids": tokenizer.apply_chat_template([
+        tokenized_output = {"text": tokenizer.apply_chat_template([
             {"role": "user", "content": example["query"]},
             {"role": "assistant", "content": example["labels"]}
-        ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True)}
+        ], padding="max_length", add_generation_prompt=False)}
 
         # Convert tensor output to a dictionary format suitable for the dataset
         return tokenized_output
@@ -202,6 +202,7 @@ def main():
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
+        dataset_text_field="text",
         data_collator=data_collator,
         compute_metrics=compute_metrics_with_tokenizer,
     )
