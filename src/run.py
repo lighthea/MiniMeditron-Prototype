@@ -1,7 +1,7 @@
 import sys
 
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction, \
-    DataCollatorWithPadding
+    DataCollatorWithPadding, DataCollatorForLanguageModeling
 import wandb, os, torch, json
 from tqdm import tqdm
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
@@ -33,9 +33,6 @@ def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     decoded_labels = tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
     decoded_labels = [blanket.replace("LABEL", str(label)) for label in decoded_labels]
-    print(decoded_prediction)
-    print("\n ###### \n ")
-    print(decoded_labels)
     # Calculate exact match
     results = exact_matching.compute(predictions=decoded_prediction, references=decoded_labels)
     return results
@@ -75,13 +72,13 @@ def init_configs(bf16_support: bool):
 
 
 # Pre-tokenization Function
-def load_dataset(config: dict) -> [dict]:
+def load_dataset(config: dict, tokenizer) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
-    if os.path.exists(config['processed_data_path']):
-        print("Loading processed dataset")
+    if os.path.exists(config['tokenized_data_path']):
+        print("Loading tokenized dataset")
         # Load the tokenized dataset
-        dataset = Dataset.load_from_disk(config['processed_data_path'])
+        dataset = Dataset.load_from_disk(config['tokenized_data_path'])
         return dataset
 
     # For each patient, retrieve the top k guidelines
@@ -108,12 +105,21 @@ def load_dataset(config: dict) -> [dict]:
                           .replace("CONTEXT", str(x["context"]))}
                           , remove_columns=["text", "context"])
 
+    # Tokenize the dataset
+    dataset = dataset.map(lambda x: tokenizer.apply_chat_template([
+        {"role": "user",
+         "content": x["query"]},
+        {"role": "assistant",
+            "content": x["labels"]}
+    ], tokenize=True, padding="max_length", add_generation_prompt=True, return_tensors="pt", truncation=True),
+        remove_columns=["query", "labels"])
+
     # Save the tokenized dataset
     # Create the folder if it doesn't exist
-    if not os.path.exists(config['processed_data_path']):
-        os.makedirs(config['processed_data_path'])
+    if not os.path.exists(config['tokenized_data_path']):
+        os.makedirs(config['tokenized_data_path'])
 
-    dataset.save_to_disk(config['processed_data_path'])
+    dataset.save_to_disk(config['tokenized_data_path'])
 
     return dataset
 
@@ -178,15 +184,14 @@ def main():
     model, tokenizer, train_args = setup_model_and_training(config)
 
     # Load the dataset
-    dataset = load_dataset(config)
-    dataset.remove_columns(["query"])
-    dataset.rename_column("labels", "label")
+    dataset = load_dataset(config, tokenizer)
+    print(dataset)
     # Randomize the dataset and split into train and validation sets
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
     compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
-    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
@@ -194,7 +199,6 @@ def main():
         args=train_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
-        dataset_text_field="query",
         peft_config=ia3_conf,
         data_collator=data_collator,
         compute_metrics=compute_metrics_with_tokenizer,
