@@ -193,7 +193,6 @@ def main():
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
     compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
@@ -203,7 +202,6 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        data_collator=data_collator,
         compute_metrics=compute_metrics_with_tokenizer,
     )
 
