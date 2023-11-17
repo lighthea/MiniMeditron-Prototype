@@ -11,6 +11,7 @@ from lib.utils import yield_structured_obj
 def preprocess_json_for_bm25(json_string: str):
     try:
         # Load the JSON string into a Python dictionary
+        json_string = json_string.replace("\'", "\"")
         data = json.loads(json_string)
 
         # Initialize an empty list to store the cleaned words
