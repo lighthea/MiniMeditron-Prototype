@@ -30,6 +30,7 @@ def preprocess_json_for_bm25(json_string: str):
         return cleaned_words
 
     except json.JSONDecodeError:
+        print(json_string)
         # Handle the case where the input is not a valid JSON string
         raise ValueError("Invalid JSON string provided.")
 
