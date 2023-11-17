@@ -106,13 +106,16 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
                           , remove_columns=["text", "context"])
 
     # Tokenize the dataset
-    dataset = dataset.map(lambda x: tokenizer.apply_chat_template([
-        {"role": "user",
-         "content": x["query"]},
-        {"role": "assistant",
-            "content": x["labels"]}
-    ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True),
-        remove_columns=["query", "labels"])
+    def transform_example(example):
+        tokenized_output = tokenizer.apply_chat_template([
+            {"role": "user", "content": example["query"]},
+            {"role": "assistant", "content": example["labels"]}
+        ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True)
+
+        # Convert tensor output to a dictionary format suitable for the dataset
+        return {key: value for key, value in tokenized_output.items()}
+
+    dataset = dataset.map(transform_example,remove_columns=["query", "labels"])
 
     # Save the tokenized dataset
     # Create the folder if it doesn't exist
