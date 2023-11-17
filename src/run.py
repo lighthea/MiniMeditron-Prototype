@@ -112,6 +112,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
             {"role": "assistant", "content": example["labels"]}
         ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True)
 
+        print(tokenized_output)
         # Convert tensor output to a dictionary format suitable for the dataset
         return {key: value for key, value in tokenized_output.items()}
 
