@@ -74,7 +74,7 @@ def init_configs(bf16_support: bool):
 
 
 # Pre-tokenization Function
-def load_dataset(config: dict, tokenizer) -> [dict]:
+def load_dataset(config: dict, tokenizer, blanket: str) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
     if os.path.exists(config['tokenized_data_path']) and not config['force_retokenize']:
@@ -111,7 +111,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
     def transform_example(example):
         tokenized_output = {"text": tokenizer.apply_chat_template([
             {"role": "user", "content": example["query"]},
-            {"role": "assistant", "content": example["labels"]}
+            {"role": "assistant", "content": blanket.replace("LABEL", example["labels"])}
         ], tokenize=False, padding="max_length", add_generation_prompt=False)}
 
         # Convert tensor output to a dictionary format suitable for the dataset
@@ -188,7 +188,7 @@ def main():
     model, tokenizer, train_args = setup_model_and_training(config, bnb_config, ia3_conf)
 
     # Load the dataset
-    dataset = load_dataset(config, tokenizer)
+    dataset = load_dataset(config, tokenizer, blanket(config))
     print(dataset["text"][0])
     # Randomize the dataset and split into train and validation sets
     dataset = dataset.shuffle()
