@@ -5,7 +5,8 @@ import wandb, os, torch, json
 from tqdm import tqdm
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from trl import SFTTrainer
-from datasets import Dataset, load_metric
+from datasets import Dataset
+from evaluate import load
 from functools import partial
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -15,7 +16,7 @@ from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt, init_wandb_project
 
 # Init the metric
-exact_matching = load_metric("exact_match")
+exact_matching = load("exact_match")
 
 
 def blanket(config: dict) -> str:
@@ -129,10 +130,6 @@ def setup_model_and_training(config: dict):
     model.gradient_checkpointing_enable()
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
     model = get_peft_model(model, ia3_config)
-
-    # Initialize the wandb project
-    init_wandb_project(config)
-
     # Log the number of trainable parameters to wandb
     wandb.log({"trainable_params": model.print_trainable_parameters()})
 
@@ -169,6 +166,9 @@ def main():
     # Load configuration
     with open('conf/config_train_m2.json') as config_file:
         config = json.load(config_file)
+
+    # Initialize the wandb project
+    init_wandb_project(config)
 
     # Initialize the accelerator and quantization configs
     _, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
