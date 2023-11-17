@@ -95,7 +95,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
     del queries, labels
 
     # Append the guidelines to the dataset
-    dataset = batch_bm25(dataset, config['guidelines_folder'], n=config['n_context_guidelines'])
+    dataset = batch_bm25(dataset, config['guidelines_folder'], n=config['n_context_guidelines'], base_folder=config['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
     partial_prompt = retrieve_prompt(config)

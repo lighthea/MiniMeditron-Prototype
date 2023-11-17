@@ -9,7 +9,8 @@
     "batch_size": 1,
     "n_context_guidelines": 2,
     "eval_steps" : 1,
-    "process_file": "data/structure/pipeline_2.json",
+    "base_folder": "data/structure/guidelines",
+    "process_file": "data/structure/pipelines/pipeline_2.json",
     "save_path": "data/exports/finetuned_models/checkpoints",
     "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
     "wandb_project": "minimed-finetune-proto0"
