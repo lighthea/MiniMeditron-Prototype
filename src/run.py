@@ -1,6 +1,7 @@
 import sys
 
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction, \
+    DataCollatorWithPadding
 import wandb, os, torch, json
 from tqdm import tqdm
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
@@ -182,8 +183,9 @@ def main():
     # Randomize the dataset and split into train and validation sets
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
-    print(dataset)
+
     compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
@@ -191,8 +193,8 @@ def main():
         args=train_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
-        dataset_text_field="text",
         peft_config=ia3_conf,
+        data_collator=data_collator,
         compute_metrics=compute_metrics_with_tokenizer,
     )
 
