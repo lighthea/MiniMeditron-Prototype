@@ -62,5 +62,5 @@ def batch_bm25(dataset: Dataset, guideline_folder: str, n: int = 3):
     dataset = dataset.map(lambda x: {"context": retrieve_n_best_guidelines(x["text"], bm25, guidelines, n=n)})
     filtered_dataset = dataset.filter(lambda x: x["context"] is not None)
 
-    print(f"Filtered {len(dataset) - len(filtered_dataset)} examples")
+    print(f"Filtered {len(dataset) - len(filtered_dataset)/len(dataset)*100}% of the dataset")
     return filtered_dataset
