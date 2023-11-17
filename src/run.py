@@ -110,7 +110,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
         tokenized_output = {"text": tokenizer.apply_chat_template([
             {"role": "user", "content": example["query"]},
             {"role": "assistant", "content": example["labels"]}
-        ], padding="max_length", add_generation_prompt=False)}
+        ], tokenize=False, padding="max_length", add_generation_prompt=False)}
 
         # Convert tensor output to a dictionary format suitable for the dataset
         return tokenized_output
