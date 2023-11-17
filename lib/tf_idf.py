@@ -48,7 +48,7 @@ def retrieve_n_best_guidelines(query: str, bm25: BM25Okapi, guidelines: list[str
     except json.JSONDecodeError as e:
         # Handle the case where the input is not a valid JSON string
         print(query)
-        raise e
+        return None
     # Retrieve the top n guidelines
     top_n_guidelines = bm25.get_top_n(preprocess_json_for_bm25(data), guidelines, n=n)
     # Return the top n guidelines
@@ -59,5 +59,8 @@ def batch_bm25(dataset: Dataset, guideline_folder: str, n: int = 3):
     print("Initializing BM25 model")
     bm25 = init_bm25(guideline_folder)
     guidelines = list(map(lambda x: str(x), yield_structured_obj(guideline_folder)))
-    dataset.map(lambda x: {"context": retrieve_n_best_guidelines(x["text"], bm25, guidelines, n=n)})
-    return dataset
+    dataset = dataset.map(lambda x: {"context": retrieve_n_best_guidelines(x["text"], bm25, guidelines, n=n)})
+    filtered_dataset = dataset.filter(lambda x: x["context"] is not None)
+
+    print(f"Filtered {len(dataset) - len(filtered_dataset)} examples")
+    return filtered_dataset
