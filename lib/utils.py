@@ -3,8 +3,6 @@ import os
 
 import wandb
 from tqdm import tqdm
-from transformers import TrainerCallback
-
 
 def yield_structured_obj(folder):
     try:

@@ -1,10 +1,12 @@
 import json
+import os
+import sys
 
 from datasets import Dataset
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 
-from utils import yield_structured_obj
+from lib.utils import yield_structured_obj
 
 def preprocess_json_for_bm25(json_string: str):
     try:
