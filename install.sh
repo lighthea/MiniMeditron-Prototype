@@ -6,7 +6,7 @@ echo "Checking if the git repo is cloned"
 cd ~ || (echo "Error : Could not change directory to home directory">&2 && exit)
 if [ ! -d "NLP-assignment" ]; then
     echo "Cloning the git repo"
-    git clone https://github.com/lighthea/MiniMeditron-Prototype.git -b release
+    git clone https://github.com/lighthea/MiniMeditron-Prototype.git -b release_clean
     cd MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
 fi
 
