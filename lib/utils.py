@@ -6,19 +6,20 @@ from tqdm import tqdm
 
 
 def yield_structured_obj(folder):
-    try:
         for file in sorted(os.listdir(folder)):
+
             if file.endswith(".jsonl"):
                 file_path = os.path.join(folder, file)
                 with open(file_path, 'r') as f:
-                    for line in f:
-                        data = json.loads(str(line))
-                        yield str(data["structure"])
+                        for line in f:
+                            try:
+                                data = json.loads(str(line))
+                                yield str(data["structure"])
 
-    except json.JSONDecodeError:
-        # Handle the case where the input is not a valid JSON string
-        raise ValueError("Invalid JSON string provided.")
-
+                            except json.JSONDecodeError:
+                                # Handle the case where the input is not a valid JSON string
+                                print(line)
+                                continue
 
 def replace_string_in_files(folder_path, old_string, new_string):
     for filename in tqdm(os.listdir(folder_path)):
