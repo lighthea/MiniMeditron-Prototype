@@ -29,6 +29,7 @@ def preprocess_json_for_bm25(json_obj: dict):
 
         return cleaned_words
 
+
 def process_folder_for_bm25(folder_path: str) -> list[str]:
     # Loop through each file in the folder
     for json_obj in yield_structured_obj(folder_path):
@@ -40,9 +41,15 @@ def init_bm25(corpus_folder_path: str) -> BM25Okapi:
 
 
 def retrieve_n_best_guidelines(query: str, bm25: BM25Okapi, guidelines: list[str], n: int = 3):
+    # Loads the JSON string into a Python dictionary
+    try:
+        data = json.loads(str(query))
+    except json.JSONDecodeError:
+        # Handle the case where the input is not a valid JSON string
+        print(query)
+        sys.exit(1)
     # Retrieve the top n guidelines
-    top_n_guidelines = bm25.get_top_n(preprocess_json_for_bm25(query), guidelines, n=n)
-
+    top_n_guidelines = bm25.get_top_n(preprocess_json_for_bm25(data), guidelines, n=n)
     # Return the top n guidelines
     return "\n\n".join(top_n_guidelines)
 
