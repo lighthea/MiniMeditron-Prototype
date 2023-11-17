@@ -47,7 +47,6 @@ def retrieve_n_best_guidelines(query: str, bm25: BM25Okapi, guidelines: list[str
         data = json.loads(query)
     except json.JSONDecodeError as e:
         # Handle the case where the input is not a valid JSON string
-        print(query)
         return None
     # Retrieve the top n guidelines
     top_n_guidelines = bm25.get_top_n(preprocess_json_for_bm25(data), guidelines, n=n)
