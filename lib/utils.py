@@ -4,12 +4,14 @@ import os
 import wandb
 from tqdm import tqdm
 
+
 def yield_structured_obj(folder):
     try:
         data = []
         for file in sorted(os.listdir(folder)):
             if file.endswith(".jsonl"):
-                with open(file, 'r') as f:
+                file_path = os.path.join(folder, file)
+                with open(file_path, 'r') as f:
                     for line in f:
                         data = json.loads(str(line))
                         data.append(str(data["structured_patient"]))
@@ -77,7 +79,6 @@ def retrieve_checkpoint(config: dict) -> str | None:
             project=os.environ["WANDB_PROJECT"],
             id=last_run_id,
             resume="must", ) as run:
-
         # Connect an Artifact to the run
         my_checkpoint_name = f"checkpoint-{last_run_id}:latest"
         my_checkpoint_artifact = run.use_artifact(my_checkpoint_name)
