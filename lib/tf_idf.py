@@ -6,7 +6,7 @@ from datasets import Dataset
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 
-from lib.utils import yield_structured_obj
+from lib.utils import yield_structured_obj, repair_json
 
 
 def preprocess_json_for_bm25(json_obj: dict):
@@ -43,11 +43,11 @@ def init_bm25(corpus_folder_path: str) -> BM25Okapi:
 def retrieve_n_best_guidelines(query: str, bm25: BM25Okapi, guidelines: list[str], n: int = 3):
     # Loads the JSON string into a Python dictionary
     try:
-        data = json.loads(str(query))
-    except json.JSONDecodeError:
+        data = json.loads(repair_json(str(query)))
+    except json.JSONDecodeError as e:
         # Handle the case where the input is not a valid JSON string
         print(query)
-        sys.exit(1)
+        raise e
     # Retrieve the top n guidelines
     top_n_guidelines = bm25.get_top_n(preprocess_json_for_bm25(data), guidelines, n=n)
     # Return the top n guidelines

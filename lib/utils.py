@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import wandb
 from tqdm import tqdm
@@ -87,3 +88,21 @@ def retrieve_checkpoint(config: dict) -> str | None:
         checkpoint_dir = my_checkpoint_artifact.download()
 
         return checkpoint_dir
+
+
+def repair_json(json_string):
+    # Pattern to identify key-value pairs where value is unquoted
+    pattern = r'(?<=:)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(,|\})'
+
+    # Function to replace unquoted values with quoted ones
+    def replace_with_quotes(match):
+        value = match.group(1)
+        # Avoid quoting true, false, null, or numbers
+        if value.strip() in ["true", "false", "null"] or re.match(r'^-?\d+(\.\d+)?$', value):
+            return f" {value}{match.group(2)}"
+        return f' "{value}"{match.group(2)}'
+
+    # Use regular expression to replace unquoted values
+    repaired_json_string = re.sub(pattern, replace_with_quotes, json_string)
+
+    return repaired_json_string
