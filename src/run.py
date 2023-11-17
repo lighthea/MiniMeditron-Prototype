@@ -73,6 +73,7 @@ def init_configs(bf16_support: bool):
 # Pre-tokenization Function
 def load_dataset(config: dict, tokenizer) -> [dict]:
     # Check if the dataset has already been tokenized
+    print("Checking if tokenized dataset exists")
     if os.path.exists(config['tokenized_data_path']):
         print("Loading tokenized dataset")
         # Load the tokenized dataset
@@ -130,8 +131,8 @@ def setup_model_and_training(config: dict):
     model.gradient_checkpointing_enable()
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
     model = get_peft_model(model, ia3_config)
-    # Log the number of trainable parameters to wandb
-    wandb.log({"trainable_params": model.print_trainable_parameters()})
+
+    print({"trainable_params": model.print_trainable_parameters()})
 
     train_args = TrainingArguments(
         output_dir=config['output_dir'],
