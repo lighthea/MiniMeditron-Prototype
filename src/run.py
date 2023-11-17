@@ -182,7 +182,7 @@ def main():
     # Randomize the dataset and split into train and validation sets
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
-
+    print(dataset)
     compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
     # Initialize the trainer
     trainer = SFTTrainer(
