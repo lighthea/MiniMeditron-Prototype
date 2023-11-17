@@ -7,15 +7,13 @@ from tqdm import tqdm
 
 def yield_structured_obj(folder):
     try:
-        data = []
         for file in sorted(os.listdir(folder)):
             if file.endswith(".jsonl"):
                 file_path = os.path.join(folder, file)
                 with open(file_path, 'r') as f:
                     for line in f:
                         data = json.loads(str(line))
-                        data.append(str(data["structured_patient"]))
-        return data
+                        yield str(data["structured_patient"])
 
     except json.JSONDecodeError:
         # Handle the case where the input is not a valid JSON string
