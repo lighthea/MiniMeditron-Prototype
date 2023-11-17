@@ -124,9 +124,8 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
     return dataset
 
 
-def setup_model_and_training(config: dict):
+def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
-    bnb_config, ia3_config = init_configs(torch.cuda.is_bf16_supported())
     model = AutoModelForCausalLM.from_pretrained(config['base_model_id'], quantization_config=bnb_config)
 
     # Initialize the tokenizer
@@ -178,10 +177,10 @@ def main():
     init_wandb_project(config)
 
     # Initialize the accelerator and quantization configs
-    _, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
+    bnb_config, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
 
     # Set up model for training
-    model, tokenizer, train_args = setup_model_and_training(config)
+    model, tokenizer, train_args = setup_model_and_training(config, bnb_config, ia3_conf)
 
     # Load the dataset
     dataset = load_dataset(config, tokenizer)

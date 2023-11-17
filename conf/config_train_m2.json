@@ -1,6 +1,6 @@
 {
     "data_folder": "data",
-    "processed_data_path": "data/exports/dataset/processed",
+    "tokenized_data_path": "data/exports/dataset/processed",
     "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
     "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
     "train_folder": "data/knowledge_database/generated_patients/structured_patients",
