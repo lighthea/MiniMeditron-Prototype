@@ -8,6 +8,7 @@ transformers @ git+https://github.com/huggingface/transformers.git@main
 peft
 trl[peft]
 bitsandbytes
+rank_bm25
 loralib
 wandb
 fuzzywuzzy

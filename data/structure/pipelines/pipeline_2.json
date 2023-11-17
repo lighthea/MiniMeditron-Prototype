@@ -1,5 +1,5 @@
 {
-  "prompt" : "Diagnose the potential conditions for the patient using the information in INPUT in the format of OUTPUT.",
+  "prompt" : "Fill this form : \n OUTPUT \n by diagnosing the potential conditions for this patient : \n INPUT \n you can use the following guidelines : \n CONTEXT \n",
   "document_structure" : {
   "Condition": ""
   }

@@ -23,7 +23,7 @@ def exact_matching(p: EvalPrediction):
     """
 
     input_ids, label = p
-    print(input_ids, label)
+
     extracted_condition = extract_condition(input_ids)
     
     if extracted_condition == label:
@@ -147,3 +147,6 @@ def compute_metrics(p:EvalPrediction):
     logits, labels = p
     zipped = zip(logits, labels)
     return [exact_matching(logits, labels) for (logit, label) in zipped]
+
+
+

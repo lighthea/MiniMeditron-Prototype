@@ -1,153 +1,211 @@
 import sys
 
 from accelerate import FullyShardedDataParallelPlugin, Accelerator
-from peft import get_peft_model
-import torch
-from torch.distributed.fsdp import FullStateDictConfig
-from torch.distributed.fsdp import FullOptimStateDictConfig
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig
-import wandb, os
-from peft import IA3Config
-from peft import prepare_model_for_kbit_training
-from trl import SFTTrainer
-from transformers import TrainingArguments
-from datasets import Dataset
+from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction
+import wandb, os, torch, json
 from tqdm import tqdm
+from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
+from trl import SFTTrainer
+from datasets import Dataset, load_metric
+from functools import partial
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from scripts.tf_idf import *
-from lib.metrics import *
+from lib.tf_idf import batch_bm25
+from lib.utils import retrieve_prompt, init_wandb_project
 
-wandb.login(key="a51dc03985c11e74e9ef700cd3093e6c78636177")
-
-fsdp_plugin = FullyShardedDataParallelPlugin(
-    state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
-    optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
-)
+# Init the metric
+exact_matching = load_metric("exact_match")
 
 
-accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
-
-wandb_project = "minimed-finetune-proto0"
-if len(wandb_project) > 0:
-    os.environ["WANDB_PROJECT"] = wandb_project
-    os.environ["WANDB_LOG_MODEL"] = "end"  # log all model checkpoints
-
-sys.path.append(os.path.join(current_dir, '..'))
-
-data_folder = current_dir + "/../data/structured_patients"
-guideline_folder = current_dir + "/../data/all_split_structured_guidelines"
-tf_idf_path = current_dir + "/../data/TF-IDF"
-folder_path = current_dir + "/../data/structured_patients/"
-for files in tqdm(os.listdir(folder_path)):
-    if files.endswith(".jsonl"):
-        # chunk the file into multiple json files
-        with open(folder_path + files) as f:
-            for i, line in enumerate(f):
-                with open(folder_path + files[:-6] + str(i) + '.json', 'w') as outfile:
-                    json.dump(json.loads(line), outfile)
-dataset = []
-
-for file in tqdm(os.listdir(folder_path)):
-    if file.endswith(".json"):
-        # read the json file
-        with open(folder_path + file) as f:
-            data = json.load(f)
-        # cut the data
-        text = data["structured_patient"]
-        label = data["condition_name"]
-
-        dataset.append((text, label))
-
-tf_idf_matrix, vectorizer = create_matrix(tf_idf_path, guideline_folder)
-
-dataset = [(retrieve_top_k_guidelines(query, tf_idf_matrix, vectorizer, data_folder, k=3) + query, label) for
-           (query, label) in dataset]
-inputs, outputs = zip(*dataset)
-
-# Create a dictionary suitable for creating a Dataset
-data_dict = {
-    'text': list(inputs),
-    'label': list(outputs)
-}
-
-# Create the Hugging Face Dataset
-dataset = Dataset.from_dict(data_dict)
-
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16
-)
-if not torch.cuda.is_bf16_supported():
-    bnb_config.bnb_4bit_compute_dtype = torch.float16
-
-base_model_id = "HuggingFaceH4/zephyr-7b-beta"
-model = AutoModelForCausalLM.from_pretrained(base_model_id, quantization_config=bnb_config)
-
-model.gradient_checkpointing_enable()
-model = prepare_model_for_kbit_training(model)
+def blanket(config: dict) -> str:
+    file = config['process_file']
+    with open(file, 'r') as f:
+        data = json.load(f)
+    return data["prompt"].replace('""', "LABEL")
 
 
-ia3_config = IA3Config(
-    task_type="CAUSAL_LM",
-    target_modules=[
-        "q_proj",
-        "k_proj",
-        "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj",
-        "lm_head",
-    ],
-    feedforward_modules=["down_proj"]
-)
-model = get_peft_model(model, ia3_config)
-print(model.print_trainable_parameters())
-model = accelerator.prepare_model(model)
+def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
+    predictions, label_ids = eval_pred
+    decoded_prediction = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    decoded_labels = tokenizer.batch_decode(label_ids, skip_special_tokens=True)
 
-# Check if gpu supports bf16
-train_args = TrainingArguments(
-    output_dir="./test",
-    num_train_epochs=2,
-    warmup_steps=5,
-    per_device_train_batch_size=1,
-    gradient_checkpointing=True,
-    gradient_accumulation_steps=4,
-    max_steps=2000,
-    learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
-    logging_steps=50,
-    optim="paged_adamw_8bit",
-    save_strategy="steps",  # Save the model checkpoint every logging step
-    save_steps=50,  # Save checkpoints every 50 steps
-    evaluation_strategy="steps",  # Evaluate the model every logging step
-    eval_steps=1,  # Evaluate and save checkpoints every 50 steps
-    do_eval=True,
-    report_to="wandb",
-    eval_accumulation_steps=2,
-    run_name="proto0-1",
-    load_best_model_at_end=True,
-    logging_dir="./logs")
+    decoded_labels = [blanket.replace("LABEL", str(label)) for label in decoded_labels]
+    # Calculate exact match
+    results = exact_matching.compute(predictions=decoded_prediction, references=decoded_labels)
+    return results
 
-if torch.cuda.is_bf16_supported():
-    train_args.bf16 = True
-    train_args.bf16_full_eval = False
 
-else:
-    train_args.fp16 = True
-    train_args.fp16_full_eval = True
+def init_configs(bf16_support: bool) -> (Accelerator, BitsAndBytesConfig):
+    float_type = torch.bfloat16 if bf16_support else torch.float16
+    print(f"Using {float_type} for training")
+    print("Initializing accelerator and quantization configs")
+    # Initialize accelerator to offload the optimizer to CPU
+    fsdp_plugin = FullyShardedDataParallelPlugin(
+        state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+        optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+    )
+    accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
 
-trainer = SFTTrainer(
-    model,
-    train_dataset=dataset,
-    eval_dataset=dataset.select(range(100)),
-    dataset_text_field="text",
-    peft_config=ia3_config,
-    compute_metrics=exact_matching,
-    args=train_args
-)
+    # Initialize the quantization config
 
-trainer.train()
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=float_type
+    )
+
+    # Initialize the IA3 config
+    ia3_config = IA3Config(
+        task_type="CAUSAL_LM",
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head",
+        ],
+        feedforward_modules=["down_proj"]
+    )
+
+    return accelerator, bnb_config, ia3_config
+
+
+# Pre-tokenization Function
+def load_dataset(config: dict, tokenizer) -> [dict]:
+    # Check if the dataset has already been tokenized
+    if os.path.exists(config['tokenized_data_path']):
+        print("Loading tokenized dataset")
+        # Load the tokenized dataset
+        dataset = Dataset.load_from_disk(config['tokenized_data_path'])
+        return dataset
+
+    # For each patient, retrieve the top k guidelines
+    queries = []
+    labels = []
+    for file in tqdm(os.listdir(config['train_folder']), desc="Loading dataset"):
+        if file.endswith(".jsonl"):
+            with open(os.path.join(config['train_folder'], file)) as f:
+                for line in f:
+                    data = json.loads(line)
+                    queries.append(data["structure"])
+                    labels.append(data["condition_name"])
+
+    dataset = Dataset.from_dict({"text": queries, "labels": labels})
+    del queries, labels
+
+    # Append the guidelines to the dataset
+    dataset = batch_bm25(dataset, config['guideline_folder'], n=config['n_context_guidelines'])
+
+    # Merge the query and context into a single string using the prompt defined in the structure file
+    partial_prompt = retrieve_prompt(config)
+    dataset = dataset.map(lambda x: {"query": partial_prompt
+                          .replace("INPUT", str(x["text"]))
+                          .replace("CONTEXT", str(x["context"]))}
+                          , remove_columns=["text", "context"])
+
+    # Tokenize the dataset
+    dataset = dataset.map(lambda x: tokenizer(x["query"], padding="max_length", truncation=True),
+                          batched=True)
+
+    # Save the tokenized dataset
+    # Create the folder if it doesn't exist
+    if not os.path.exists(config['tokenized_data_path']):
+        os.makedirs(config['tokenized_data_path'])
+
+    dataset.save_to_disk(config['tokenized_data_path'])
+
+    return dataset
+
+
+def setup_model_and_training(config: dict):
+    # Initialize the accelerator and quantization configs
+    accelerator, bnb_config, ia3_config = init_configs(torch.cuda.is_bf16_supported())
+    model = AutoModelForCausalLM.from_pretrained(config['base_model_id'], quantization_config=bnb_config)
+
+    # Initialize the tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(config['base_model_id'])
+    tokenizer.pad_token = tokenizer.eos_token
+
+    # Set up model for training
+    model.gradient_checkpointing_enable()
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+    model = get_peft_model(model, ia3_config)
+
+    # Initialize the wandb project
+    init_wandb_project(config)
+
+    # Log the number of trainable parameters to wandb
+    wandb.log({"trainable_params": model.print_trainable_parameters()})
+    model = accelerator.prepare_model(model)
+
+    train_args = TrainingArguments(
+        output_dir=config['output_dir'],
+        num_train_epochs=config['num_train_epochs'],
+        per_device_train_batch_size=config['batch_size'],
+        warmup_steps=5,
+        gradient_checkpointing=True,
+        gradient_accumulation_steps=4,
+        max_steps=2000,
+        learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
+        logging_steps=50,
+        optim="paged_adamw_8bit",
+        save_strategy="steps",  # Save the model checkpoint every logging step
+        save_steps=50,  # Save checkpoints every 50 steps
+        evaluation_strategy="steps",  # Evaluate the model every logging step
+        eval_steps=1,  # Evaluate and save checkpoints every 50 steps
+        do_eval=True,
+        report_to=["wandb"],
+        eval_accumulation_steps=2,
+        run_name="proto0-1",
+        load_best_model_at_end=True,
+        bf16=torch.cuda.is_bf16_supported(),
+        bf16_full_eval=torch.cuda.is_bf16_supported(),
+        fp16=not torch.cuda.is_bf16_supported(),
+        fp16_full_eval=not torch.cuda.is_bf16_supported(),
+    )
+
+    return model, tokenizer, train_args
+
+
+def main():
+    # Load configuration
+    with open('config_train_m2.json.json') as config_file:
+        config = json.load(config_file)
+
+    # Initialize the accelerator and quantization configs
+    accelerator, _, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
+
+    # Set up model for training
+    model, tokenizer, train_args = setup_model_and_training(config)
+
+    # Load the dataset
+    dataset = load_dataset(config, tokenizer)
+    # Randomize the dataset and split into train and validation sets
+    dataset = dataset.shuffle()
+    dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
+
+    compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer)
+    # Initialize the trainer
+    trainer = SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=train_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        dataset_text_field="text",
+        peft_config=ia3_conf,
+        compute_metrics=compute_metrics_with_tokenizer,
+    )
+
+    trainer.train()
+
+
+if __name__ == "__main__":
+    main()

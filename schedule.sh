@@ -8,6 +8,4 @@ runai submit \
 		--pvc runai-mlo-sallinen-scratch:/scratch \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen"\
-		--environment OPEN_AI_API_KEY="$OPEN_AI_API_KEY" \
-		--environment WANDB_KEY="$WANDB_API_KEY" \
 		--command -- /entrypoint.sh sleep infinity
