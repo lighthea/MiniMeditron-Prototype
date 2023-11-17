@@ -75,7 +75,7 @@ def init_configs(bf16_support: bool):
 def load_dataset(config: dict, tokenizer) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
-    if os.path.exists(config['tokenized_data_path']):
+    if os.path.exists(config['tokenized_data_path']) and not config['force_retokenize']:
         print("Loading tokenized dataset")
         # Load the tokenized dataset
         dataset = Dataset.load_from_disk(config['tokenized_data_path'])
@@ -111,7 +111,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
          "content": x["query"]},
         {"role": "assistant",
             "content": x["labels"]}
-    ], tokenize=True, padding="max_length", add_generation_prompt=True, return_tensors="pt", truncation=True),
+    ], tokenize=True, padding="max_length", add_generation_prompt=False, return_tensors="pt", truncation=True),
         remove_columns=["query", "labels"])
 
     # Save the tokenized dataset

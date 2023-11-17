@@ -1,5 +1,6 @@
 {
     "data_folder": "data",
+    "force_retokenize": true,
     "tokenized_data_path": "data/exports/dataset/processed",
     "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
     "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
