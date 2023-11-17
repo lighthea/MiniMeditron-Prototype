@@ -13,7 +13,7 @@ def yield_structured_obj(folder):
                 with open(file_path, 'r') as f:
                     for line in f:
                         data = json.loads(str(line))
-                        yield str(data["structured_patient"])
+                        yield str(data["structure"])
 
     except json.JSONDecodeError:
         # Handle the case where the input is not a valid JSON string
