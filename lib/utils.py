@@ -105,4 +105,4 @@ def repair_json(json_string):
     # Use regular expression to replace unquoted values
     repaired_json_string = re.sub(pattern, replace_with_quotes, json_string)
 
-    return repaired_json_string
+    return repaired_json_string.replace("'", '"')
