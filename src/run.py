@@ -167,7 +167,7 @@ def setup_model_and_training(config: dict):
 
 def main():
     # Load configuration
-    with open('config_train_m2.json.json') as config_file:
+    with open('conf/config_train_m2.json') as config_file:
         config = json.load(config_file)
 
     # Initialize the accelerator and quantization configs
