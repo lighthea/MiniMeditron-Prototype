@@ -1,7 +1,5 @@
 import sys
 
-from accelerate import FullyShardedDataParallelPlugin, Accelerator
-from torch.distributed.fsdp import FullOptimStateDictConfig, FullStateDictConfig
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction
 import wandb, os, torch, json
 from tqdm import tqdm
@@ -38,16 +36,10 @@ def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     return results
 
 
-def init_configs(bf16_support: bool) -> (Accelerator, BitsAndBytesConfig):
+def init_configs(bf16_support: bool):
     float_type = torch.bfloat16 if bf16_support else torch.float16
     print(f"Using {float_type} for training")
     print("Initializing accelerator and quantization configs")
-    # Initialize accelerator to offload the optimizer to CPU
-    fsdp_plugin = FullyShardedDataParallelPlugin(
-        state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
-        optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
-    )
-    accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
 
     # Initialize the quantization config
 
@@ -74,7 +66,7 @@ def init_configs(bf16_support: bool) -> (Accelerator, BitsAndBytesConfig):
         feedforward_modules=["down_proj"]
     )
 
-    return accelerator, bnb_config, ia3_config
+    return bnb_config, ia3_config
 
 
 # Pre-tokenization Function
@@ -126,7 +118,7 @@ def load_dataset(config: dict, tokenizer) -> [dict]:
 
 def setup_model_and_training(config: dict):
     # Initialize the accelerator and quantization configs
-    accelerator, bnb_config, ia3_config = init_configs(torch.cuda.is_bf16_supported())
+    bnb_config, ia3_config = init_configs(torch.cuda.is_bf16_supported())
     model = AutoModelForCausalLM.from_pretrained(config['base_model_id'], quantization_config=bnb_config)
 
     # Initialize the tokenizer
@@ -143,7 +135,6 @@ def setup_model_and_training(config: dict):
 
     # Log the number of trainable parameters to wandb
     wandb.log({"trainable_params": model.print_trainable_parameters()})
-    model = accelerator.prepare_model(model)
 
     train_args = TrainingArguments(
         output_dir=config['output_dir'],
@@ -180,7 +171,7 @@ def main():
         config = json.load(config_file)
 
     # Initialize the accelerator and quantization configs
-    accelerator, _, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
+    _, ia3_conf = init_configs(torch.cuda.is_bf16_supported())
 
     # Set up model for training
     model, tokenizer, train_args = setup_model_and_training(config)
