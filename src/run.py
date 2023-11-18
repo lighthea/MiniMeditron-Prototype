@@ -47,10 +47,8 @@ def init_configs(bf16_support: bool):
     # Initialize the quantization config
 
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=float_type
+        load_in_8bit=True,
+        llm_int8_has_fp16_weight=True
     )
 
     # Initialize the IA3 config
