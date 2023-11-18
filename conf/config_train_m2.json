@@ -8,7 +8,7 @@
     "output_dir": "data/exports/finetuned_models",
     "num_train_epochs": 2,
     "batch_size": 8,
-    "n_context_guidelines": 2,
+    "n_context_guidelines": 3,
     "eval_steps" : 20,
     "base_folder": "data/structure/guidelines",
     "process_file": "data/structure/pipelines/pipeline_2.json",
