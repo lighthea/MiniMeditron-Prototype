@@ -14,11 +14,11 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.tf_idf import batch_bm25
-from lib.utils import retrieve_prompt, init_wandb_project
+from lib.utils import retrieve_prompt, decode_predictions
+from lib.wandb import WandbPredictionProgressCallback, init_wandb_project
 
 # Init the metric
 exact_matching = load("exact_match")
-
 
 def blanket(config: dict) -> str:
     file = config['process_file']
@@ -30,7 +30,8 @@ def blanket(config: dict) -> str:
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
     predictions, label_ids = eval_pred
     decoded_prediction = [tokenizer.decode(prediction, skip_special_tokens=True) for prediction in predictions]
-    decoded_labels = [blanket.replace("LABEL", tokenizer.batch_decode(label_id, skip_special_tokens=True)) for label_id in label_ids]
+    decoded_labels = [blanket.replace("LABEL", tokenizer.batch_decode(label_id, skip_special_tokens=True)) for label_id
+                      in label_ids]
 
     print(decoded_prediction[0])
     # Calculate exact match
@@ -96,7 +97,8 @@ def load_dataset(config: dict, tokenizer, blanket: str) -> [dict]:
     del queries, labels
 
     # Append the guidelines to the dataset
-    dataset = batch_bm25(dataset, config['guidelines_folder'], n=config['n_context_guidelines'], base_folder=config['base_folder'])
+    dataset = batch_bm25(dataset, config['guidelines_folder'], n=config['n_context_guidelines'],
+                         base_folder=config['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
     partial_prompt = retrieve_prompt(config)
@@ -115,7 +117,7 @@ def load_dataset(config: dict, tokenizer, blanket: str) -> [dict]:
         # Convert tensor output to a dictionary format suitable for the dataset
         return tokenized_output
 
-    dataset = dataset.map(transform_example,remove_columns=["query", "labels"])
+    dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
 
     # Save the tokenized dataset
     # Create the folder if it doesn't exist
@@ -157,7 +159,7 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
         eval_steps=config["eval_steps"],  # Evaluate and save checkpoints every 50 steps
         do_eval=True,
         report_to=["wandb"],
-        eval_accumulation_steps=2,
+        eval_accumulation_steps=1,
         run_name="proto0-1",
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
@@ -190,6 +192,7 @@ def main():
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
+    # Initialize the trainer
     compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer, blanket=blanket(config))
     # Initialize the trainer
     trainer = SFTTrainer(
@@ -200,9 +203,20 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        #compute_metrics=compute_metrics_with_tokenizer,
+        # compute_metrics=compute_metrics_with_tokenizer,
     )
 
+    # Instantiate the WandbPredictionProgressCallback
+    progress_callback = WandbPredictionProgressCallback(
+        trainer=trainer,
+        tokenizer=tokenizer,
+        val_dataset=dataset["test"],
+        num_samples=10,
+        freq=2
+    )
+
+    # Add the callback to the trainer
+    trainer.add_callback(progress_callback)
     trainer.train()
 
 
