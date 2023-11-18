@@ -37,7 +37,7 @@ class WandbPredictionProgressCallback(WandbCallback):
 
     def on_evaluate(self, args, state, control, **kwargs):
         print("entering on_evaluate")
-        super().on_evaluate(args, state, control, **kwargs)
+        # super().on_evaluate(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions every `freq` epochs
         if state.global_step % state.eval_steps == 0:
             # generate predictions

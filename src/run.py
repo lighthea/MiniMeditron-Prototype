@@ -24,7 +24,7 @@ def blanket(config: dict) -> str:
     file = config['process_file']
     with open(file, 'r') as f:
         data = json.load(f)
-    return data["prompt"].replace('""', "LABEL")
+    return data["document_structure"].replace('""', "LABEL")
 
 
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
