@@ -136,8 +136,7 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
     tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
-    model.gradient_checkpointing_enable()
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
     model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
@@ -147,8 +146,7 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
         num_train_epochs=config['num_train_epochs'],
         per_device_train_batch_size=config['batch_size'],
         warmup_steps=5,
-        gradient_checkpointing=True,
-        gradient_accumulation_steps=4,
+        gradient_checkpointing=False,
         max_steps=2000,
         learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
         logging_steps=100,
