@@ -208,8 +208,7 @@ def main():
         trainer=trainer,
         tokenizer=tokenizer,
         val_dataset=dataset["test"],
-        num_samples=10,
-        freq=2
+        num_samples=10
     )
 
     # Add the callback to the trainer

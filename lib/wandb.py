@@ -20,7 +20,7 @@ class WandbPredictionProgressCallback(WandbCallback):
         freq (int, optional): Frequency of logging. Defaults to 2.
     """
 
-    def __init__(self, trainer, tokenizer, val_dataset, num_samples=100, freq=1):
+    def __init__(self, trainer, tokenizer, val_dataset, num_samples=100):
         """Initializes the WandbPredictionProgressCallback instance.
 
         Args:
@@ -34,19 +34,20 @@ class WandbPredictionProgressCallback(WandbCallback):
         self.trainer = trainer
         self.tokenizer = tokenizer
         self.sample_dataset = val_dataset.select(range(num_samples))
-        self.freq = freq
 
     def on_evaluate(self, args, state, control, **kwargs):
         super().on_evaluate(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions every `freq` epochs
-        if state.global_step % state.eval_steps == 0 and state.eval_steps % self.freq == 0:
+        if state.global_step % state.eval_steps == 0:
             # generate predictions
             predictions = self.trainer.predict(self.sample_dataset)
             # decode predictions and labels
             predictions = decode_predictions(self.tokenizer, predictions)
             # add predictions to a wandb.Table
             predictions_df = pd.DataFrame(predictions)
-            predictions_df["epoch"] = state.epoch
+            print(predictions.head())
+
+            predictions_df["step"] = state.global_step
             records_table = self._wandb.Table(dataframe=predictions_df)
             # log the table to wandb
             self._wandb.log({"sample_predictions": records_table})
