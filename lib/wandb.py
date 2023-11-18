@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from transformers.integrations import WandbCallback
 import wandb
-
+from transformers import Trainer
 from lib.utils import decode_predictions
 
 
@@ -40,7 +40,7 @@ class WandbPredictionProgressCallback(WandbCallback):
         # control the frequency of logging by logging the predictions every `freq` epochs
         if state.global_step % state.eval_steps == 0:
             # generate predictions
-            print(self.sample_dataset)
+            print(self.trainer.get_eval_dataloader)
             predictions = self.trainer.evaluate(self.sample_dataset)
             # decode predictions and labels
             predictions = decode_predictions(self.tokenizer, predictions)
