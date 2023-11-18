@@ -20,7 +20,7 @@ class WandbPredictionProgressCallback(WandbCallback):
         freq (int, optional): Frequency of logging. Defaults to 2.
     """
 
-    def __init__(self, trainer, tokenizer, val_dataset, num_samples=100, freq=2):
+    def __init__(self, trainer, tokenizer, val_dataset, num_samples=100, freq=1):
         """Initializes the WandbPredictionProgressCallback instance.
 
         Args:
@@ -39,7 +39,7 @@ class WandbPredictionProgressCallback(WandbCallback):
     def on_evaluate(self, args, state, control, **kwargs):
         super().on_evaluate(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions every `freq` epochs
-        if state.epoch % self.freq == 0:
+        if state.global_step % state.eval_steps == 0 and state.eval_steps % self.freq == 0:
             # generate predictions
             predictions = self.trainer.predict(self.sample_dataset)
             # decode predictions and labels
