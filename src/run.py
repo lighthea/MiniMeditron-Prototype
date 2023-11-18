@@ -149,7 +149,7 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
         gradient_checkpointing=False,
         max_steps=2000,
         learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
-        logging_steps=100,
+        logging_steps=60,
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
         save_steps=60,  # Save checkpoints every 50 steps
