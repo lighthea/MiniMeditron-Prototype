@@ -48,7 +48,6 @@ def init_configs(bf16_support: bool):
 
     bnb_config = BitsAndBytesConfig(
         load_in_8bit=True,
-        llm_int8_has_fp16_weight=True
     )
 
     # Initialize the IA3 config
