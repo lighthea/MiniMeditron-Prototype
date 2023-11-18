@@ -25,7 +25,6 @@ echo "Creating the folder structure"
 mkdir data/exports
 mkdir data/exports/finetuned_models
 mkdir data/exports/finetuned_models/checkpoints
-mkdir data/exports/tokenized_data
 
 mkdir data/knowledge_database
 mkdir data/knowledge_database/guidelines
