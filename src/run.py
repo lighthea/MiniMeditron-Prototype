@@ -20,11 +20,14 @@ from lib.wandb import WandbPredictionProgressCallback, init_wandb_project
 # Init the metric
 exact_matching = load("exact_match")
 
+
 def blanket(config: dict) -> str:
     file = config['process_file']
     with open(file, 'r') as f:
         data = json.load(f)
-    return data["document_structure"].replace('""', "LABEL")
+
+    data["document_structure"]["Condition"] = "LABEL"
+    return json.dumps(data["document_structure"])
 
 
 def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
