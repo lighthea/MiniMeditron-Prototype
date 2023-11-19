@@ -13,7 +13,8 @@ from lib.training import init_configs, setup_model_and_training, blanket, load_d
 
 def main():
     # Load configuration
-    with open('conf/config_train_m2.json') as config_file:
+    conf_file = sys.argv[1]
+    with open(conf_file) as config_file:
         config = json.load(config_file)
 
     # Create all paths
