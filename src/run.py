@@ -8,13 +8,16 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.wandb import init_wandb_project
-from lib.training import init_configs, setup_model_and_training, blanket, load_dataset
+from lib.training import init_configs, setup_model_and_training, blanket, load_dataset, create_all_path
 
 
 def main():
     # Load configuration
     with open('conf/config_train_m2.json') as config_file:
         config = json.load(config_file)
+
+    # Create all paths
+    create_all_path(config)
 
     # Initialize the wandb project
     init_wandb_project(config)
