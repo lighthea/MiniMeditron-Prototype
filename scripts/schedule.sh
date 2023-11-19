@@ -1,5 +1,5 @@
 runai submit \
-		--name "proto0-sandbox" \
+		--name "sandbox" \
 		--interactive \
 		--gpu 1 \
 		--image ic-registry.epfl.ch/mlo/pytorch:latest \
@@ -8,5 +8,4 @@ runai submit \
 		--pvc runai-mlo-sallinen-scratch:/scratch \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen" \
-		--environment INSTALL_SCRIPT="cd ~ && wget https://raw.githubusercontent.com/lighthea/MiniMeditron-Prototype/release_clean/install.sh && chmod +x install.sh && ./install.sh"\
-    --command -- /entrypoint.sh sleep infinity
+    --command -- /entrypoint_new.sh sleep infinity
