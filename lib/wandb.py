@@ -15,9 +15,8 @@ class WandbPredictionProgressCallback(WandbCallback):
     Attributes:
         trainer (Trainer): The Hugging Face Trainer instance.
         tokenizer (AutoTokenizer): The tokenizer associated with the model.
-        sample_dataset (Dataset): A subset of the validation dataset for generating predictions.
+        val_dataset (Dataset): A subset of the validation dataset for generating predictions.
         num_samples (int, optional): Number of samples to select from the validation dataset for generating predictions. Defaults to 100.
-        freq (int, optional): Frequency of logging. Defaults to 2.
     """
 
     def __init__(self, trainer, tokenizer, val_dataset, num_samples=100):
@@ -58,7 +57,7 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
 
     # Replace 'your_username' with your wandb username and 'your_project_name' with your project name
 
-    runs = api.runs(f"alexs-team/{config['wandb_project']}")
+    runs = api.runs(f"alexs-team/{config['wandb_parameters']['wandb_project']}")
     if len(runs) == 0:
         return None
     # The first run in the list is the most recent one

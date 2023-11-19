@@ -1,6 +1,6 @@
 REGISTRY=ic-registry.epfl.ch
 IMG_PROJECT=mlo-sallinen-meditron
-IMG_NAME=prot0
+IMG_NAME=mlo-sallinen-meditron/prot0
 
 runai submit \
 		--name "sandbox" \
