@@ -16,10 +16,10 @@ def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
     # Place the last dimension of the predictions in the first dimension
     eval_predictions.predictions = np.moveaxis(eval_predictions.predictions, -1, 0)
     print("Predictions shape: ", eval_predictions.predictions.shape)
+    print(eval_predictions.predictions[0])
 
     preds = [np.where(pred != -100, pred, tokenizer.pad_token_id) for pred in eval_predictions.predictions]
     prediction_text = tokenizer.batch_decode(preds[0].astype(int), skip_special_tokens=True, clean_up_tokenization_spaces=True)
-    print(prediction_text)
     return {"labels": labels, "predictions": prediction_text}
 
 
