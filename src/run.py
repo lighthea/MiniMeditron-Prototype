@@ -1,7 +1,7 @@
 import sys
 
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, AutoTokenizer, TrainingArguments, EvalPrediction, \
-    DataCollatorWithPadding, DataCollatorForLanguageModeling
+    DataCollatorWithPadding, DataCollatorForLanguageModeling, Seq2SeqTrainer
 import wandb, os, torch, json
 from tqdm import tqdm
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
@@ -138,7 +138,6 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
     model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
-
     train_args = TrainingArguments(
         output_dir=config['output_dir'],
         num_train_epochs=config['num_train_epochs'],
@@ -199,7 +198,7 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        compute_metrics=compute_metrics_with_tokenizer,
+        #compute_metrics=compute_metrics_with_tokenizer,
     )
 
     trainer.train()

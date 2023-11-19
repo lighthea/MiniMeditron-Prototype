@@ -5,7 +5,7 @@ import re
 import numpy as np
 import wandb
 from tqdm import tqdm
-from transformers import EvalPrediction
+from transformers import EvalPrediction, Trainer
 
 
 def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
