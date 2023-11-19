@@ -14,7 +14,7 @@ def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
     labels = tokenizer.batch_decode(labs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
     print("Predictions shape: ", eval_predictions.predictions.shape)
-    preds = np.where(eval_predictions.predictions != -100, eval_predictions.predictions, tokenizer.pad_token_id)
+    preds = [np.where(pred != -100, pred, tokenizer.pad_token_id) for pred in eval_predictions.predictions]
     prediction_text = tokenizer.batch_decode(preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
     return {"labels": labels, "predictions": prediction_text}
