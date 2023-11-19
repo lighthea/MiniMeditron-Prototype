@@ -11,7 +11,6 @@ bitsandbytes
 rank_bm25
 evaluate
 loralib
-pandas
 wandb
 fuzzywuzzy
 datasets

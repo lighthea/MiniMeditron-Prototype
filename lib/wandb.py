@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 from transformers.integrations import WandbCallback
 import wandb
 from transformers import Trainer

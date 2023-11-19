@@ -32,5 +32,3 @@ mkdir data/knowledge_database/generated_patients
 
 unzip data/structured_patients.zip -d data/knowledge_database/generated_patients
 unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
-
-python src/run.py
