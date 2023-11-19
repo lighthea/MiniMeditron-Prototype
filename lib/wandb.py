@@ -65,16 +65,6 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
     return runs[0].id
 
 
-def init_wandb_project(config: dict) -> None:
-    # Wandb Login
-    print("Logging into wandb")
-    wandb.login(key=config['wandb_key'])
-
-    if len(config["wandb_project"]) > 0:
-        os.environ["WANDB_PROJECT"] = config["wandb_project"]
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
-
-
 def retrieve_checkpoint(config: dict) -> str | None:
     last_run_id = retrieve_last_wandb_run_id(config)
     if last_run_id is None:

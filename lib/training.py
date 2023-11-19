@@ -2,10 +2,12 @@ import json
 import os
 
 import torch
+import wandb
 from datasets import Dataset
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from trl import SFTTrainer
 
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
@@ -20,7 +22,8 @@ def blanket(config: dict) -> str:
     return json.dumps(data["document_structure"])
 
 
-def init_configs(bf16_support: bool):
+def init_configs():
+    bf16_support = torch.cuda.is_bf16_supported()
     float_type = torch.bfloat16 if bf16_support else torch.float16
     print(f"Using {float_type} for training")
     print("Initializing accelerator and quantization configs")
@@ -117,7 +120,8 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
 
 def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
-    model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'], quantization_config=bnb_config)
+    model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
+                                                 quantization_config=bnb_config)
 
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
@@ -135,7 +139,8 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
         warmup_steps=5,
         gradient_checkpointing=False,
         max_steps=config["model_parameters"]['max_steps'],
-        learning_rate=config["model_parameters"]["learning_rate"],  # Want about 10x smaller than the Mistral learning rate
+        learning_rate=config["model_parameters"]["learning_rate"],
+        # Want about 10x smaller than the Mistral learning rate
         logging_steps=config["model_parameters"]["eval_steps"],
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
@@ -157,7 +162,6 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
 
 
 def create_all_path(config: dict):
-
     for key in config["model_folders"].keys():
         if not os.path.exists(config["model_folders"][key]):
             os.makedirs(config["model_folders"][key])
@@ -165,3 +169,35 @@ def create_all_path(config: dict):
     for key in config["general_folders"].keys():
         if not os.path.exists(config["general_folders"][key]):
             os.makedirs(config["general_folders"][key])
+
+
+def load_config(config_file: str) -> dict:
+    with open(config_file) as config_file:
+        config = json.load(config_file)
+
+    create_all_path(config)
+    return config
+
+
+def init_wandb_project(config: dict) -> None:
+    # Wandb Login
+    print("Logging into wandb")
+    wandb.login(key=config['wandb_key'])
+
+    if len(config["wandb_project"]) > 0:
+        os.environ["WANDB_PROJECT"] = config["wandb_project"]
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
+
+
+def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
+    trainer = SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=train_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        peft_config=ia3_conf,
+        dataset_text_field="text",
+    )
+
+    return trainer
