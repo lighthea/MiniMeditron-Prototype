@@ -58,10 +58,12 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
     print("Checking if tokenized dataset exists")
     if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
             not config["other_parameters"]['force_retokenize']):
-        print("Loading tokenized dataset")
-        # Load the tokenized dataset
-        dataset = Dataset.load_from_disk(config["model_folders"]['tokenized_data_path'])
-        return dataset
+        #check if directory is not empty
+        if os.listdir(config["model_folders"]['tokenized_data_path']):
+            print("Loading tokenized dataset")
+            # Load the tokenized dataset
+            dataset = Dataset.load_from_disk(config["model_folders"]['tokenized_data_path'])
+            return dataset
 
     # For each patient, retrieve the top k guidelines
     queries = []
