@@ -182,10 +182,10 @@ def load_config(config_file: str) -> dict:
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
-    wandb.login(key=config['wandb_key'])
+    wandb.login(key=config["wandb_parameters"]['wandb_key'])
 
-    if len(config["wandb_project"]) > 0:
-        os.environ["WANDB_PROJECT"] = config["wandb_project"]
+    if len(config["wandb_parameters"]["wandb_project"]) > 0:
+        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
 
