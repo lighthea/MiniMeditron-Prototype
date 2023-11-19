@@ -1,5 +1,9 @@
 # Minimeditron-Prototype
 
+# Run on cluster 
+
+cd ~ && wget "https://raw.githubusercontent.com/lighthea/MiniMeditron-Prototype/release_clean/install.sh"  && chmod +x install.sh
+
 ## Description 
 Minimeditron aims to provide medical field workers with an assistant to patient diagnostic and treatment suggestion.
 Minimeditron uses publicly available guidelines to make its judgement leveraging several LLMs to produce its answer.
