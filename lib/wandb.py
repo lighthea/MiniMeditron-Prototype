@@ -3,6 +3,7 @@ import pandas as pd
 from transformers.integrations import WandbCallback
 import wandb
 from transformers import Trainer
+
 from lib.utils import decode_predictions
 
 
@@ -38,18 +39,18 @@ class WandbPredictionProgressCallback(WandbCallback):
     def on_evaluate(self, args, state, control, **kwargs):
         super().on_evaluate(args, state, control, **kwargs)
         # control the frequency of logging by logging the predictions every `freq` epochs
-        if state.global_step % state.eval_steps == 0:
-            # generate predictions
-            print(list(self.trainer.get_eval_dataloader(self.sample_dataset)))
-            predictions = self.trainer.evaluate(self.sample_dataset)
-            # decode predictions and labels
-            predictions = decode_predictions(self.tokenizer, predictions)
-            # add predictions to a wandb.Table
-            predictions_df = pd.DataFrame(predictions)
-            predictions_df["step"] = state.global_step
-            records_table = self._wandb.Table(dataframe=predictions_df)
-            # log the table to wandb
-            self._wandb.log({"sample_predictions": records_table})
+        # if state.global_step % state.eval_steps == 0:
+        # generate predictions
+        # print(list(self.trainer.get_eval_dataloader(self.sample_dataset)))
+        # predictions = self.trainer.evaluate(self.sample_dataset)
+        # decode predictions and labels
+        # predictions = decode_predictions(self.tokenizer, predictions)
+        # add predictions to a wandb.Table
+        # predictions_df = pd.DataFrame(predictions)
+        # predictions_df["step"] = state.global_step
+        # records_table = self._wandb.Table(dataframe=predictions_df)
+        # log the table to wandb
+        # ._wandb.log({"sample_predictions": records_table})
 
 
 def retrieve_last_wandb_run_id(config: dict) -> str | None:

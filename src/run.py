@@ -30,16 +30,12 @@ def blanket(config: dict) -> str:
     return json.dumps(data["document_structure"])
 
 
-def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket):
-    predictions, label_ids = eval_pred
-    decoded_prediction = [tokenizer.decode(prediction, skip_special_tokens=True) for prediction in predictions]
-    decoded_labels = [blanket.replace("LABEL", tokenizer.batch_decode(label_id, skip_special_tokens=True)) for label_id
-                      in label_ids]
+def compute_metrics(eval_pred: EvalPrediction, tokenizer, blanket_string: str):
+    data = decode_predictions(tokenizer, eval_pred)
+    data["labels"] = [blanket_string.replace("LABEL", label) for label in data["labels"]]
 
-    print(decoded_prediction[0])
     # Calculate exact match
-    results = exact_matching.compute(predictions=decoded_prediction, references=decoded_labels)
-    return results
+    return exact_matching.compute(predictions=data["predictions"], references=data["labels"])
 
 
 def init_configs(bf16_support: bool):
@@ -193,7 +189,7 @@ def main():
     dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
     # Initialize the trainer
-    compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer, blanket=blanket(config))
+    compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer, blanket_string=blanket(config))
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
@@ -203,19 +199,9 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        # compute_metrics=compute_metrics_with_tokenizer,
+        compute_metrics=compute_metrics_with_tokenizer,
     )
 
-    # Instantiate the WandbPredictionProgressCallback
-    progress_callback = WandbPredictionProgressCallback(
-        trainer=trainer,
-        tokenizer=tokenizer,
-        val_dataset=dataset["test"],
-        num_samples=10
-    )
-
-    # Add the callback to the trainer
-    trainer.add_callback(progress_callback)
     trainer.train()
 
 
