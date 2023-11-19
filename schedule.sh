@@ -8,4 +8,8 @@ runai submit \
 		--pvc runai-mlo-sallinen-scratch:/scratch \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen"\
-		--command -- /entrypoint.sh sleep infinity
+		--environment INSTALL_SCRIPT="https://raw.githubusercontent.com/lighthea/MiniMeditron-Prototype/release_clean/install.sh"\
+		--command -- /entrypoint.sh  \
+		            cd ~ && wget "$INSTALL_SCRIPT"\
+		            chmod +x install.sh && ./install.sh \
+		            sleep infinity
