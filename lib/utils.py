@@ -8,9 +8,10 @@ from tqdm import tqdm
 
 
 def decode_predictions(tokenizer, predictions):
-    preds = np.where(predictions.label_ids != -100, predictions.label_ids, tokenizer.pad_token_id)
-    labels = tokenizer.batch_decode(preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-    prediction_text = tokenizer.batch_decode(predictions.predictions)
+    labs = np.where(predictions.label_ids != -100, predictions.label_ids, tokenizer.pad_token_id)
+    labels = tokenizer.batch_decode(labs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    preds = np.where(predictions.predictions != -100, predictions.predictions, tokenizer.pad_token_id)
+    prediction_text = tokenizer.batch_decode(preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
     return {"labels": labels, "predictions": prediction_text}
 
 
