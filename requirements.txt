@@ -12,7 +12,6 @@ rank_bm25
 evaluate
 loralib
 wandb
-fuzzywuzzy
 datasets
 wandb
 accelerate
