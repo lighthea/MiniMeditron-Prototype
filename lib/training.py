@@ -53,7 +53,7 @@ def init_configs():
     return bnb_config, ia3_config
 
 
-def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
+def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_context: bool = True) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
     if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
@@ -79,17 +79,23 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
     dataset = Dataset.from_dict({"text": queries, "labels": labels})
     del queries, labels
 
-    # Append the guidelines to the dataset
-    dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
-                         n=config["model_parameters"]['n_context_guidelines'],
-                         base_folder=config["general_folders"]['base_folder'])
+    # Append the guidelines to the dataset if needed
+    if with_context:
+        dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
+                             n=config["model_parameters"]['n_context_guidelines'],
+                             base_folder=config["general_folders"]['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
     partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
-    dataset = dataset.map(lambda x: {"query": partial_prompt
-                          .replace("INPUT", str(x["text"]))
-                          .replace("CONTEXT", str(x["context"]))}
-                          , remove_columns=["text", "context"])
+    if with_context:
+        dataset = dataset.map(lambda x: {"query": partial_prompt
+                              .replace("INPUT", str(x["text"]))
+                              .replace("CONTEXT", str(x["context"]))}
+                              , remove_columns=["text", "context"])
+    else:
+        dataset = dataset.map(lambda x: {"query": partial_prompt
+                              .replace("INPUT", str(x["text"]))}
+                              , remove_columns=["text"])
 
     # Tokenize the dataset
     def transform_example(example):
