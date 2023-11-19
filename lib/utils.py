@@ -2,13 +2,15 @@ import json
 import os
 import re
 
+import numpy as np
 import wandb
 from tqdm import tqdm
 
 
 def decode_predictions(tokenizer, predictions):
-    labels = tokenizer.batch_decode(predictions.label_ids)
-    prediction_text = tokenizer.batch_decode(predictions.predictions.argmax(axis=-1))
+    preds = np.where(predictions.label_ids != -100, predictions.label_ids, tokenizer.pad_token_id)
+    labels = tokenizer.batch_decode(preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    prediction_text = tokenizer.batch_decode(predictions.predictions)
     return {"labels": labels, "predictions": prediction_text}
 
 
