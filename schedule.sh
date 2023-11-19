@@ -10,8 +10,9 @@ runai submit \
 		--environment EPFML_LDAP="sallinen"\
 		--environment INSTALL_SCRIPT="https://raw.githubusercontent.com/lighthea/MiniMeditron-Prototype/release_clean/install.sh"\
 		--command -- /entrypoint.sh  \
-		            su $EPFML_LDAP -c \
+		            su "$EPFML_LDAP" \
 		            cd ~ \
 		            wget "$INSTALL_SCRIPT"\
-		            chmod +x install.sh && ./install.sh \
+		            chmod +x install.sh
+		            install.sh \
 		            sleep infinity
