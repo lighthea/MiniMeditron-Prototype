@@ -1,5 +1,4 @@
 FROM ic-registry.epfl.ch/mlo/pytorch:latest
-LABEL authors="sallinen"
 
 RUN apt-get update && apt-get install -y unzip  && rm -rf /var/lib/apt/lists/*
 
@@ -9,5 +8,9 @@ COPY entrypoint.sh /entrypoint_new.sh
 # Make your script executable
 RUN chmod +x /install_project.sh
 
+ARG NB_USER=sallinen
+ARG NB_UID=30217
+ARG NB_GROUP=MLO-unit
+ARG NB_GID=204162
 
 ENTRYPOINT ["/entrypoint_new.sh"]
