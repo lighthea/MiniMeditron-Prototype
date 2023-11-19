@@ -5,13 +5,17 @@ import re
 import numpy as np
 import wandb
 from tqdm import tqdm
+from transformers import EvalPrediction
 
 
-def decode_predictions(tokenizer, predictions):
-    labs = np.where(predictions.label_ids != -100, predictions.label_ids, tokenizer.pad_token_id)
+def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
+    labs = np.where(eval_predictions.label_ids != -100, eval_predictions.label_ids, tokenizer.pad_token_id)
     labels = tokenizer.batch_decode(labs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-    preds = np.where(predictions.predictions != -100, predictions.predictions, tokenizer.pad_token_id)
+
+    print("Predictions shape: ", eval_predictions.predictions.shape)
+    preds = np.where(eval_predictions.predictions != -100, eval_predictions.predictions, tokenizer.pad_token_id)
     prediction_text = tokenizer.batch_decode(preds, skip_special_tokens=True, clean_up_tokenization_spaces=True)
+
     return {"labels": labels, "predictions": prediction_text}
 
 
