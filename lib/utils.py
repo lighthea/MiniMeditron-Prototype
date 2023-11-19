@@ -10,6 +10,7 @@ from transformers import EvalPrediction
 
 def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
     print("Labels shape: ", eval_predictions.label_ids.shape)
+    print(eval_predictions.label_ids)
     labs = np.where(eval_predictions.label_ids != -100, eval_predictions.label_ids, tokenizer.pad_token_id)
     labels = tokenizer.batch_decode(labs, skip_special_tokens=True, clean_up_tokenization_spaces=True)
     print(eval_predictions.predictions)
