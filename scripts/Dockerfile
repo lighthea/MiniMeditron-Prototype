@@ -1,5 +1,5 @@
 FROM ic-registry.epfl.ch/mlo/pytorch:latest
-
+MAINTAINER "Alexandre Sallinen  <alexandre.sallinen@epfl.ch>"
 RUN apt-get update && apt-get install -y unzip  && rm -rf /var/lib/apt/lists/*
 
 # Add your custom script
