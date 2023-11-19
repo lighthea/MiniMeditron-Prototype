@@ -1,18 +1,35 @@
 {
-    "data_folder": "data",
-    "force_retokenize": false,
-    "tokenized_data_path": "data/exports/dataset/model2/processed",
-    "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-    "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
-    "train_folder": "data/knowledge_database/generated_patients/structured_patients",
-    "output_dir": "data/exports/finetuned_models/model2",
-    "num_train_epochs": 2,
-    "batch_size": 2,
-    "n_context_guidelines": 3,
-    "eval_steps" : 50,
-    "base_folder": "data/structure/guidelines",
-    "process_file": "data/structure/pipelines/pipeline_2.json",
-    "save_path": "data/exports/finetuned_models/model2/checkpoints",
-    "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
-    "wandb_project": "minimed-finetune-proto0"
+    "general_folders" : {
+        "data_folder": "data",
+        "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
+        "train_folder": "data/knowledge_database/generated_patients/structured_patients",
+        "base_folder": "data/structure/guidelines"
+    },
+
+    "model_folders" : {
+        "tokenized_data_path": "data/exports/dataset/model2/processed",
+        "output_dir": "data/exports/finetuned_models/model2",
+        "save_path": "data/exports/finetuned_models/model2/checkpoints"
+    },
+
+    "model_parameters" : {
+        "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
+        "num_train_epochs": 2,
+        "batch_size": 2,
+        "n_context_guidelines": 3,
+        "eval_steps" : 50,
+        "learning_rate": 5e-5,
+        "max_steps": 2000,
+        "test_size": 0.01,
+        "process_file": "data/structure/pipelines/pipeline_2.json"
+    },
+
+    "wandb_parameters" : {
+        "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
+        "wandb_project": "minimed-finetune-proto0"
+    },
+
+    "other_parameters" : {
+        "force_retokenize": false
+    }
 }

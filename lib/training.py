@@ -12,7 +12,7 @@ from lib.utils import retrieve_prompt
 
 
 def blanket(config: dict) -> str:
-    file = config['process_file']
+    file = config["model_parameters"]['process_file']
     with open(file, 'r') as f:
         data = json.load(f)
 
@@ -53,18 +53,19 @@ def init_configs(bf16_support: bool):
 def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
-    if os.path.exists(config['tokenized_data_path']) and not config['force_retokenize']:
+    if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
+            not config["other_parameters"]['force_retokenize']):
         print("Loading tokenized dataset")
         # Load the tokenized dataset
-        dataset = Dataset.load_from_disk(config['tokenized_data_path'])
+        dataset = Dataset.load_from_disk(config["model_folders"]['tokenized_data_path'])
         return dataset
 
     # For each patient, retrieve the top k guidelines
     queries = []
     labels = []
-    for file in tqdm(os.listdir(config['train_folder']), desc="Loading dataset"):
+    for file in tqdm(os.listdir(config["general_folders"]['train_folder']), desc="Loading dataset"):
         if file.endswith(".jsonl"):
-            with open(os.path.join(config['train_folder'], file)) as f:
+            with open(os.path.join(config["general_folders"]['train_folder'], file)) as f:
                 for line in f:
                     data = json.loads(line)
                     queries.append(data["structure"])
@@ -74,11 +75,12 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
     del queries, labels
 
     # Append the guidelines to the dataset
-    dataset = batch_bm25(dataset, config['guidelines_folder'], n=config['n_context_guidelines'],
-                         base_folder=config['base_folder'])
+    dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
+                         n=config["model_parameters"]['n_context_guidelines'],
+                         base_folder=config["general_folders"]['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
-    partial_prompt = retrieve_prompt(config)
+    partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
     dataset = dataset.map(lambda x: {"query": partial_prompt
                           .replace("INPUT", str(x["text"]))
                           .replace("CONTEXT", str(x["context"]))}
@@ -100,23 +102,25 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None) -> [dict]:
         return tokenized_output
 
     dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
+    dataset = dataset.shuffle()
+    dataset = dataset.train_test_split(test_size=config["model_parameters"]["test_size"], shuffle=True)
+
+    # Create the folder if it doesn't exist
+    if not os.path.exists(config["model_folders"]['tokenized_data_path']):
+        os.makedirs(config["model_folders"]['tokenized_data_path'])
 
     # Save the tokenized dataset
-    # Create the folder if it doesn't exist
-    if not os.path.exists(config['tokenized_data_path']):
-        os.makedirs(config['tokenized_data_path'])
-
-    dataset.save_to_disk(config['tokenized_data_path'])
+    dataset.save_to_disk(config["model_folders"]['tokenized_data_path'])
 
     return dataset
 
 
 def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
-    model = AutoModelForCausalLM.from_pretrained(config['base_model_id'], quantization_config=bnb_config)
+    model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'], quantization_config=bnb_config)
 
     # Initialize the tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(config['base_model_id'])
+    tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
     tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
@@ -125,19 +129,19 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
 
     print({"trainable_params": model.print_trainable_parameters()})
     train_args = TrainingArguments(
-        output_dir=config['output_dir'],
-        num_train_epochs=config['num_train_epochs'],
-        per_device_train_batch_size=config['batch_size'],
+        output_dir=config["model_folders"]['output_dir'],
+        num_train_epochs=config["model_parameters"]['num_train_epochs'],
+        per_device_train_batch_size=config["model_parameters"]['batch_size'],
         warmup_steps=5,
         gradient_checkpointing=False,
-        max_steps=2000,
-        learning_rate=5.0e-5,  # Want about 10x smaller than the Mistral learning rate
-        logging_steps=config["eval_steps"],
+        max_steps=config["model_parameters"]['max_steps'],
+        learning_rate=config["model_parameters"]["learning_rate"],  # Want about 10x smaller than the Mistral learning rate
+        logging_steps=config["model_parameters"]["eval_steps"],
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
-        save_steps=config["eval_steps"],  # Save checkpoints every 50 steps
+        save_steps=config["model_parameters"]["eval_steps"],  # Save checkpoints every 50 steps
         evaluation_strategy="steps",  # Evaluate the model every logging step
-        eval_steps=config["eval_steps"],  # Evaluate and save checkpoints every 50 steps
+        eval_steps=config["model_parameters"]["eval_steps"],  # Evaluate and save checkpoints every 50 steps
         do_eval=True,
         report_to=["wandb"],
         eval_accumulation_steps=1,
@@ -153,17 +157,11 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
 
 
 def create_all_path(config: dict):
-    if not os.path.exists(config['output_dir']):
-        os.makedirs(config['output_dir'])
 
-    if not os.path.exists(config['tokenized_data_path']):
-        os.makedirs(config['tokenized_data_path'])
+    for key in config["model_folders"].keys():
+        if not os.path.exists(config["model_folders"][key]):
+            os.makedirs(config["model_folders"][key])
 
-    if not os.path.exists(config['train_folder']):
-        os.makedirs(config['train_folder'])
-
-    if not os.path.exists(config['guidelines_folder']):
-        os.makedirs(config['guidelines_folder'])
-
-    if not os.path.exists(config['save_path']):
-        os.makedirs(config['save_path'])
+    for key in config["general_folders"].keys():
+        if not os.path.exists(config["general_folders"][key]):
+            os.makedirs(config["general_folders"][key])

@@ -31,12 +31,7 @@ def main():
 
     # Load the dataset
     dataset = load_dataset(config, tokenizer, blanket(config))
-    # Randomize the dataset and split into train and validation sets
-    dataset = dataset.shuffle()
-    dataset = dataset.train_test_split(test_size=0.01, shuffle=True)
 
-    # Initialize the trainer
-    # compute_metrics_with_tokenizer = partial(compute_metrics, tokenizer=tokenizer, blanket_string=blanket(config))
     # Initialize the trainer
     trainer = SFTTrainer(
         model=model,
@@ -46,7 +41,6 @@ def main():
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        # compute_metrics=compute_metrics_with_tokenizer,
     )
 
     trainer.train()

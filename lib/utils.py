@@ -58,8 +58,7 @@ def replace_string_in_files(folder_path, old_string, new_string):
                 file.write(filedata)
 
 
-def retrieve_prompt(config: dict) -> str:
-    file = config['process_file']
+def retrieve_prompt(file: str) -> str:
     with open(file, 'r') as f:
         data = json.load(f)
     return data["prompt"].replace("OUTPUT", str(data["document_structure"]))
