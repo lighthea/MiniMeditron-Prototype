@@ -2,6 +2,7 @@ import os
 import sys
 
 import torch
+from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 
@@ -10,6 +11,7 @@ sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.training import load_config, load_dataset, init_wandb_project, setup_model_and_training_finetuning, \
     init_configs
+from tqdm import tqdm
 
 
 def main():
@@ -36,8 +38,10 @@ def main():
     def reward_model(x):
         return torch.rand(10)
 
-    train_dataset = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
+    train_dataset: DatasetDict = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
     train_dataset = train_dataset.rename_column("labels", "response")
+    train_dataset = train_dataset.remove_columns("query")
+    train_dataset = train_dataset.rename_column("text", "query")
 
     def tokenize(sample):
         sample["input_ids"] = tokenizer.encode(sample["query"])
@@ -59,7 +63,6 @@ def main():
         "pad_token_id": tokenizer.eos_token_id,
     }
 
-    from tqdm import tqdm
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 

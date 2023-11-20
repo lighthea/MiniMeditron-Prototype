@@ -58,7 +58,7 @@ def load_dataset(config: dict,
                  blanket_string: str = None,
                  with_context: bool = True,
                  with_output: bool = True,
-                 with_token: bool = False) -> [dict]:
+                 with_token: bool = False) -> DatasetDict:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
     if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
