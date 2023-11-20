@@ -143,7 +143,9 @@ def load_dataset(config: dict,
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
     model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
-                                                 quantization_config=bnb_config)
+                                                 quantization_config=bnb_config,
+                                                 use_flash_attention_2=True
+                                                 )
 
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
@@ -221,6 +223,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
+        neftune_noise_alpha=5,
     )
 
     return trainer
@@ -243,6 +246,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         data_collator=collator,
         dataset_text_field="text",
+        neftune_noise_alpha=5,
     )
 
     return trainer
