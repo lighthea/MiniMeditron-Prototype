@@ -1,6 +1,6 @@
 FROM ic-registry.epfl.ch/mlo/pytorch:latest
 MAINTAINER "Alexandre Sallinen  <alexandre.sallinen@epfl.ch>"
-RUN apt-get update && apt-get install -y unzip  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y unzip
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
 RUN add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
 RUN apt-get update && apt-get install -y cuda-nvcc-11-7  && rm -rf /var/lib/apt/lists/*
