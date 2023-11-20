@@ -69,3 +69,5 @@ def main():
         ppo_trainer.log_stats(stats, batch, rewards)
         print(stats)
 
+if __name__ == "__main__":
+    main()
