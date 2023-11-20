@@ -3,7 +3,7 @@ import os
 
 import torch
 import wandb
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
@@ -67,7 +67,7 @@ def load_dataset(config: dict,
         if os.listdir(config["model_folders"]['tokenized_data_path']):
             print("Loading tokenized dataset")
             # Load the tokenized dataset
-            dataset = Dataset.load_from_disk(config["model_folders"]['tokenized_data_path'])
+            dataset = DatasetDict.load_from_disk(config["model_folders"]['tokenized_data_path'])
             return dataset
 
     # For each patient, retrieve the top k guidelines
