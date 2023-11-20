@@ -36,7 +36,7 @@ def main():
     train_dataset = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
     ppo_trainer = PPOTrainer(
         model=model,
-        config=config,
+        config=ppo_config,
         train_dataset=train_dataset["train"],
         tokenizer=tokenizer,
     )
