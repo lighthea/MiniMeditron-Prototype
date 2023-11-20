@@ -51,6 +51,7 @@ def main():
 
     from tqdm import tqdm
 
+    print("Start training")
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
