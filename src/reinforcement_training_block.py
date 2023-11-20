@@ -35,6 +35,7 @@ def main():
         return torch.rand(10)
 
     train_dataset = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
+    print(train_dataset["train"])
     ppo_trainer = PPOTrainer(
         model=model,
         config=ppo_config,
