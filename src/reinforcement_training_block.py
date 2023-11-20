@@ -36,7 +36,12 @@ def main():
 
     train_dataset = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
     train_dataset = train_dataset.rename_column("text", "query")
-    print(train_dataset["train"])
+
+    def tokenize(sample):
+        sample["input_ids"] = tokenizer.encode(sample["query"])
+        return sample
+
+    train_dataset = train_dataset.map(tokenize, batched=False)
     ppo_trainer = PPOTrainer(
         model=model,
         config=ppo_config,
@@ -53,7 +58,6 @@ def main():
     }
 
     from tqdm import tqdm
-    print(list(enumerate(ppo_trainer.dataloader)))
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
