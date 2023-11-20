@@ -12,6 +12,8 @@ rank_bm25
 evaluate
 loralib
 wandb
+optimum
+flash-attn
 datasets
 wandb
 accelerate

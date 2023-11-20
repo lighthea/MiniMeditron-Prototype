@@ -7,7 +7,7 @@ from datasets import Dataset
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
@@ -53,12 +53,17 @@ def init_configs():
     return bnb_config, ia3_config
 
 
-def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_context: bool = True) -> [dict]:
+def load_dataset(config: dict,
+                 tokenizer,
+                 blanket_string: str = None,
+                 with_context: bool = True,
+                 with_output: bool = True,
+                 with_token: bool = False) -> [dict]:
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
     if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
             not config["other_parameters"]['force_retokenize']):
-        #check if directory is not empty
+        # check if directory is not empty
         if os.listdir(config["model_folders"]['tokenized_data_path']):
             print("Loading tokenized dataset")
             # Load the tokenized dataset
@@ -74,7 +79,7 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_conte
                 for line in f:
                     data = json.loads(line)
                     queries.append(data["structure"])
-                    labels.append(data["condition_name"])
+                    labels.append(data["condition_name"])  # TODO: change to labels using utils.replace_string_in_files
 
     dataset = Dataset.from_dict({"text": queries, "labels": labels})
     del queries, labels
@@ -87,6 +92,7 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_conte
 
     # Merge the query and context into a single string using the prompt defined in the structure file
     partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
+
     if with_context:
         dataset = dataset.map(lambda x: {"query": partial_prompt
                               .replace("INPUT", str(x["text"]))
@@ -100,16 +106,24 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_conte
     # Tokenize the dataset
     def transform_example(example):
         assistant_prompt = ""
-        if blanket_string is None:
-            assistant_prompt = example["labels"]
-        else:
-            assistant_prompt = blanket_string.replace("LABEL", example["labels"])
+        if with_output:
+            if blanket_string is None:
+                assistant_prompt = example["labels"]
+            else:
+                assistant_prompt = blanket_string.replace("LABEL", example["labels"])
+        if with_output:
+            tokenized_output = {"text": tokenizer.apply_chat_template([
+                {"role": "user", "content": example["query"]},
+                {"role": "assistant", "content": assistant_prompt}
+            ], tokenize=with_token, padding="max_length",
+                add_generation_prompt=False,
+                max_length=tokenizer.model_max_length)}
 
-        tokenized_output = {"text": tokenizer.apply_chat_template([
-            {"role": "user", "content": example["query"]},
-            {"role": "assistant", "content": assistant_prompt}
-        ], tokenize=False, padding="max_length", add_generation_prompt=False)}
-        # Convert tensor output to a dictionary format suitable for the dataset
+        else:
+            tokenized_output = {"text": tokenizer.apply_chat_template([
+                {"role": "user", "content": example["query"]},
+            ], tokenize=with_token, padding="max_length", add_generation_prompt=True)}
+
         return tokenized_output
 
     dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
@@ -126,7 +140,7 @@ def load_dataset(config: dict, tokenizer, blanket_string: str = None, with_conte
     return dataset
 
 
-def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
+def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
     model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
                                                  quantization_config=bnb_config)
@@ -134,6 +148,7 @@ def setup_model_and_training(config: dict, bnb_config: BitsAndBytesConfig, ia3_c
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
     tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = 'right'
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
@@ -205,6 +220,28 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
+        dataset_text_field="text",
+    )
+
+    return trainer
+
+
+def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
+    instruction_template = "<|user|>"
+    response_template = "<|assistant|>"
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template,
+                                               response_template=response_template,
+                                               tokenizer=tokenizer,
+                                               mlm=False)
+
+    trainer = SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=train_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        peft_config=ia3_conf,
+        data_collator=collator,
         dataset_text_field="text",
     )
 
