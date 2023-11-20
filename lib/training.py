@@ -126,7 +126,7 @@ def load_dataset(config: dict,
 
         return tokenized_output
 
-    dataset = dataset.map(transform_example, remove_columns=None if not with_output else ["query", "labels"])
+    dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=config["model_parameters"]["test_size"], shuffle=True)
 
