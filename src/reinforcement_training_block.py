@@ -27,8 +27,9 @@ def main():
     init_wandb_project(config)
 
     bnb_config, ia3_conf = init_configs()
-    model, tokenizer, train_args = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
 
+    model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
+    tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
     tokenizer.pad_token = tokenizer.eos_token
 
     # Define the reward function as a random number between 0 and 1
