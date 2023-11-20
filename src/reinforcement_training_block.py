@@ -33,6 +33,7 @@ def main():
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
     tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = 'right'
 
     # Define the reward function as a random number between 0 and 1
     def reward_model(x):
@@ -42,7 +43,7 @@ def main():
     train_dataset = train_dataset.rename_column("text", "query")
 
     def tokenize(sample):
-        sample["input_ids"] = tokenizer.encode(sample["query"])
+        sample["input_ids"] = tokenizer.encode(sample["query"], padding="max_length", max_length=4096)
         return sample
 
     train_dataset = train_dataset.map(tokenize, batched=False)
