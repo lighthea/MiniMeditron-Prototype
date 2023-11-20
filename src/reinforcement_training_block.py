@@ -60,7 +60,10 @@ def main():
         "top_p": 1.0,
         "do_sample": True,
         "pad_token_id": tokenizer.eos_token_id,
+        "max_new_tokens": 1024
     }
+
+    tokenizer.padding_side = 'left'
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
