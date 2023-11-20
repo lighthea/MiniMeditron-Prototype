@@ -5,12 +5,10 @@ import torch
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-
-from lib.training import load_config, load_dataset
+from lib.training import load_config, load_dataset, init_wandb_project
 
 
 def main():
@@ -23,6 +21,9 @@ def main():
         learning_rate=1.41e-5,
         log_with="wandb"
     )
+
+    # Initialize the wandb project
+    init_wandb_project(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -50,24 +51,24 @@ def main():
     }
 
     from tqdm import tqdm
-
-    print("Start training")
+    print(list(enumerate(ppo_trainer.dataloader)))
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
-        #### Get response from SFTModel
+        # Get response from SFTModel
         response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
-        #### Compute reward score
+        # Compute reward score
         texts = [q + r for q, r in zip(batch["query"], batch["response"])]
         pipe_outputs = reward_model(texts)
         rewards = [torch.tensor(output[1]["score"]) for output in pipe_outputs]
 
-        #### Run PPO step
+        # Run PPO step
         stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
         ppo_trainer.log_stats(stats, batch, rewards)
         print(stats)
+
 
 if __name__ == "__main__":
     main()
