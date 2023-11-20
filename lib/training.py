@@ -117,12 +117,12 @@ def load_dataset(config: dict,
                 {"role": "assistant", "content": assistant_prompt}
             ], tokenize=with_token, padding="max_length",
                 add_generation_prompt=False,
-                max_length=tokenizer.model_max_length)}
+                max_length=4096)}
 
         else:
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
-            ], tokenize=with_token, padding="max_length", add_generation_prompt=True)}
+            ], tokenize=with_token, padding="max_length", add_generation_prompt=False, max_length=4096)}
 
         return tokenized_output
 
@@ -224,6 +224,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         dataset_text_field="text",
         neftune_noise_alpha=5,
+        max_seq_length=4096,
     )
 
     return trainer
@@ -247,6 +248,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         data_collator=collator,
         dataset_text_field="text",
         neftune_noise_alpha=5,
+        max_seq_length=4096,
     )
 
     return trainer

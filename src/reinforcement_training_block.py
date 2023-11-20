@@ -6,7 +6,6 @@ from trl import PPOConfig, AutoModelForCausalLMWithValueHead
 from lib.training import load_config
 
 
-
 def main():
     # Load configuration
     conf_file = sys.argv[1]
