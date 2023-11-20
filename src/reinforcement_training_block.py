@@ -8,7 +8,8 @@ from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import load_config, load_dataset, init_wandb_project
+from lib.training import load_config, load_dataset, init_wandb_project, setup_model_and_training_finetuning, \
+    init_configs
 
 
 def main():
@@ -25,8 +26,8 @@ def main():
     # Initialize the wandb project
     init_wandb_project(config)
 
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(model_name)
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    bnb_config, ia3_conf = init_configs()
+    model, tokenizer, train_args = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
 
     tokenizer.pad_token = tokenizer.eos_token
 
