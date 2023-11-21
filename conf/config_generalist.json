@@ -1,7 +1,7 @@
 {
     "general_folders" : {
         "data_folder": "data",
-        "train_folder": "data/knowledge_database/generated_patients/structured_guidelines",
+        "train_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "base_folder": "data/structure/guidelines"
     },
 
