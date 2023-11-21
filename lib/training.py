@@ -151,7 +151,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     # Initialize the accelerator and quantization configs
     model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
                                                  quantization_config=bnb_config,
-                                                 use_flash_attention_2=True
+                                                 #use_flash_attention_2=True
                                                  )
 
     # Initialize the tokenizer
@@ -160,7 +160,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     tokenizer.padding_side = 'right'
 
     # Set up model for training
-    #model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
+    model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
     model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
@@ -183,7 +183,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         report_to=["wandb"],
         eval_accumulation_steps=1,
         run_name="proto0-1",
-        neftune_noise_alpha=5,
+        #neftune_noise_alpha=5,
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
         bf16_full_eval=torch.cuda.is_bf16_supported(),
