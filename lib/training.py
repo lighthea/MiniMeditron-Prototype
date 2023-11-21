@@ -247,6 +247,9 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         instruction_template_ids = tokenizer.encode("\n" + instruction_template, add_special_tokens=False)[2:]
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
 
+    # drop the text column
+    dataset["train"].remove_columns("text")
+
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
                                                response_template=response_template_ids,
                                                tokenizer=tokenizer,
@@ -260,7 +263,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         data_collator=collator,
-        dataset_text_field="text",
+        dataset_text_field="input_ids",
         neftune_noise_alpha=5,
         max_seq_length=4096,
     )
