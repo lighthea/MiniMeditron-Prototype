@@ -183,6 +183,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         report_to=["wandb"],
         eval_accumulation_steps=1,
         run_name="proto0-1",
+        neftune_noise_alpha=5,
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
         bf16_full_eval=torch.cuda.is_bf16_supported(),
@@ -247,14 +248,10 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         instruction_template_ids = tokenizer.encode("\n" + instruction_template, add_special_tokens=False)[2:]
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
 
-    # drop the text column
-    dataset["train"].remove_columns("text")
-    dataset["test"].remove_columns("text")
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
                                                response_template=response_template_ids,
                                                tokenizer=tokenizer,
                                                mlm=False)
-    print(dataset["train"])
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -263,8 +260,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         data_collator=collator,
-        dataset_text_field="input_ids",
-        neftune_noise_alpha=5,
+        dataset_text_field="text",
         max_seq_length=4096,
     )
 

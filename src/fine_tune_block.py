@@ -27,8 +27,7 @@ def main():
     model, tokenizer, train_args = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
 
     # Load the dataset
-    dataset = load_dataset(config, tokenizer, blanket(config), with_token=True)
-    print(dataset["train"][0])
+    dataset = load_dataset(config, tokenizer, blanket(config))
     # Initialize the trainer
     trainer = launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
 
