@@ -29,7 +29,7 @@ def main():
     # Load the dataset
     dataset = load_dataset(config, tokenizer, blanket(config), with_token=True)
     # Initialize the trainer
-    trainer = launch_training(model, tokenizer, train_args, dataset, ia3_conf)
+    trainer = launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
 
     # Train the model
     trainer.train()
