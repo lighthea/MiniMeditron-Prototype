@@ -103,7 +103,7 @@ def load_dataset(config: dict,
         dataset = dataset.map(lambda x: {"query": partial_prompt
                               .replace("INPUT", str(x["text"]))}
                               , remove_columns=["text"])
-
+    print(dataset)
     # Tokenize the dataset
     def transform_example(example):
         assistant_prompt = ""
@@ -116,7 +116,7 @@ def load_dataset(config: dict,
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
                 {"role": "assistant", "content": assistant_prompt}
-            ], tokenize=False,  add_generation_prompt=False)}
+            ], tokenize=False, add_generation_prompt=False)}
 
         else:
             tokenized_output = {"text": tokenizer.apply_chat_template([
@@ -157,9 +157,9 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
                                                      )
     else:
         model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
-                                                 quantization_config=bnb_config,
-                                                 use_flash_attention_2=True
-                                                 )
+                                                     quantization_config=bnb_config,
+                                                     use_flash_attention_2=True
+                                                     )
 
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
@@ -229,8 +229,14 @@ def init_wandb_project(config: dict) -> None:
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
 
-def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
+    if config["model_parameters"]["task"] == "qa":
+        return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
+    elif config["model_parameters"]["task"] == "finetune":
+        return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
 
+
+def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -272,7 +278,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         data_collator=collator,
         dataset_text_field="text",
-        max_seq_length=max_seq_length+1,
+        max_seq_length=max_seq_length + 1,
         dataset_batch_size=100,
     )
 

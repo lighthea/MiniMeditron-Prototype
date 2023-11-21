@@ -6,7 +6,7 @@ sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.training import init_configs, setup_model_and_training_finetuning, blanket, load_dataset, create_all_path, \
     load_config, \
-    init_wandb_project, launch_training, launch_training_qa
+    init_wandb_project, launch_training, launch_training_qa, launch_training_finetune
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
                            with_context=False,
                            with_output=False)
     # Initialize the trainer
-    trainer = launch_training(model, tokenizer, train_args, dataset, ia3_conf)
+    trainer = launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
 
     # Train the model
     trainer.train()
