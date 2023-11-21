@@ -236,7 +236,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         dataset_text_field="text",
         neftune_noise_alpha=5,
-        max_seq_length=max_seq_length+1,
+        #max_seq_length=max_seq_length+1,
     )
 
     return trainer
