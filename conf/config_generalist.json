@@ -1,19 +1,19 @@
 {
     "general_folders" : {
         "data_folder": "data",
-        "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "train_folder": "data/knowledge_database/generated_patients/structured_guidelines",
         "base_folder": "data/structure/guidelines"
     },
 
     "model_folders" : {
-        "tokenized_data_path": "data/exports/dataset/model2/processed",
-        "output_dir": "data/exports/finetuned_models/model2",
-        "save_path": "data/exports/finetuned_models/model2/checkpoints"
+        "tokenized_data_path": "data/exports/dataset/generalist-model/processed",
+        "output_dir": "data/exports/finetuned_models/generalist-model",
+        "save_path": "data/exports/finetuned_models/generalist-model/checkpoints"
     },
 
     "model_parameters" : {
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
+        "baseline_name" : "generalist-model",
         "num_train_epochs": 2,
         "batch_size": 2,
         "eval_steps" : 50,
@@ -21,8 +21,8 @@
         "learning_rate": 5e-4,
         "max_steps": 2000,
         "test_size": 0.01,
-        "run_name": "model2-qa",
-        "process_file": "data/structure/pipelines/pipeline_2.json"
+        "run_name": "generalist-model",
+        "process_file": "data/structure/pipelines/task/learning.json"
     },
 
     "wandb_parameters" : {

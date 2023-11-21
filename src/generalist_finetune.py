@@ -27,7 +27,12 @@ def main():
     model, tokenizer, train_args = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
 
     # Load the dataset
-    dataset = load_dataset(config, tokenizer,blanket_string=None, with_token=True, with_context=False, with_output=False)
+    dataset = load_dataset(config,
+                           tokenizer,
+                           blanket_string=None,
+                           with_token=True,
+                           with_context=False,
+                           with_output=False)
     # Initialize the trainer
     trainer = launch_training(model, tokenizer, train_args, dataset, ia3_conf)
 

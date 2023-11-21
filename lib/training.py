@@ -11,6 +11,7 @@ from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
+from lib.wandb import retrieve_checkpoint
 
 
 def blanket(config: dict) -> str:
@@ -148,7 +149,14 @@ def load_dataset(config: dict,
 
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
-    model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
+    model = None
+    if config["model_parameters"]["start_from_checkpoint"]:
+        model = AutoModelForCausalLM.from_pretrained(retrieve_checkpoint(config["model_parameters"]["baseline_name"]),
+                                                     quantization_config=bnb_config,
+                                                     use_flash_attention_2=True
+                                                     )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
                                                  quantization_config=bnb_config,
                                                  use_flash_attention_2=True
                                                  )
@@ -160,7 +168,8 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
-    model = get_peft_model(model, ia3_config)
+    if not config["model_parameters"]["start_from_checkpoint"]:
+        model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
     train_args = TrainingArguments(

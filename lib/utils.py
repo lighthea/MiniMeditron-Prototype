@@ -23,7 +23,6 @@ def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
     prediction_text = tokenizer.batch_decode(preds[0].astype(int), skip_special_tokens=True, clean_up_tokenization_spaces=True)
     return {"labels": labels, "predictions": prediction_text}
 
-
 def yield_structured_obj(folder):
     for file in sorted(os.listdir(folder)):
 

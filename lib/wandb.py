@@ -55,30 +55,17 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
     # Initialize the API client
     api = wandb.Api()
 
-    # Replace 'your_username' with your wandb username and 'your_project_name' with your project name
-
     runs = api.runs(f"alexs-team/{config['wandb_parameters']['wandb_project']}")
     if len(runs) == 0:
         return None
     # The first run in the list is the most recent one
+    print(f"Found {len(runs)} runs")
+    print(f"Last run id: {runs[0].id}")
     return runs[0].id
 
 
 def retrieve_checkpoint(config: dict) -> str | None:
-    last_run_id = retrieve_last_wandb_run_id(config)
-    if last_run_id is None:
-        print("No checkpoint found")
-        return None
-    # If there already exists a checkpoint for this model in wandb then retrieve it
-    with wandb.init(
-            project=os.environ["WANDB_PROJECT"],
-            id=last_run_id,
-            resume="must", ) as run:
-        # Connect an Artifact to the run
-        my_checkpoint_name = f"checkpoint-{last_run_id}:latest"
-        my_checkpoint_artifact = run.use_artifact(my_checkpoint_name)
-
-        # Download checkpoint to a folder and return the path
-        checkpoint_dir = my_checkpoint_artifact.download()
-
-        return checkpoint_dir
+    run = wandb.init()
+    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/{config["model_parameters"]["baseline_name"]}:v1', type='model')
+    artifact_dir = artifact.download()
+    return artifact_dir
