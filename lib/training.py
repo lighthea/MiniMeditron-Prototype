@@ -233,8 +233,15 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
 def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
-    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template,
-                                               response_template=response_template,
+    # Checks if the instruction template is the first token of the first prompt
+    if dataset["train"][0]["text"][0].startswith(instruction_template):
+        instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
+    else:
+        instruction_template_ids = tokenizer.encode("\n"+instruction_template, add_special_tokens=False)[2:]
+    response_template_ids = tokenizer.encode("\n"+response_template, add_special_tokens=False)[2:]
+
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
+                                               response_template=response_template_ids,
                                                tokenizer=tokenizer,
                                                mlm=False)
 
