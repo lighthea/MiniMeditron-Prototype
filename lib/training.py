@@ -249,7 +249,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
 
     # drop the text column
     dataset["train"].remove_columns("text")
-
+    dataset["test"].remove_columns("text")
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
                                                response_template=response_template_ids,
                                                tokenizer=tokenizer,
