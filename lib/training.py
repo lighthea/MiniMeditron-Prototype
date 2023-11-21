@@ -57,7 +57,6 @@ def init_configs():
 def load_dataset(config: dict,
                  tokenizer,
                  blanket_string: str = None,
-                 with_context: bool = True,
                  with_output: bool = True,
                  with_token: bool = False) -> DatasetDict:
     # Check if the dataset has already been tokenized
@@ -85,6 +84,9 @@ def load_dataset(config: dict,
     dataset = Dataset.from_dict({"text": queries, "labels": labels})
     del queries, labels
 
+    partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
+    with_context = "CONTEXT" in partial_prompt
+
     # Append the guidelines to the dataset if needed
     if with_context:
         dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
@@ -92,8 +94,6 @@ def load_dataset(config: dict,
                              base_folder=config["general_folders"]['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
-    partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
-
     if with_context:
         dataset = dataset.map(lambda x: {"query": partial_prompt
                               .replace("INPUT", str(x["text"]))
@@ -104,6 +104,7 @@ def load_dataset(config: dict,
                               .replace("INPUT", str(x["text"]))}
                               , remove_columns=["text"])
     print(dataset)
+
     # Tokenize the dataset
     def transform_example(example):
         assistant_prompt = ""
@@ -112,7 +113,7 @@ def load_dataset(config: dict,
                 assistant_prompt = example["labels"]
             else:
                 assistant_prompt = blanket_string.replace("LABEL", example["labels"])
-        if with_output:
+
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
                 {"role": "assistant", "content": assistant_prompt}

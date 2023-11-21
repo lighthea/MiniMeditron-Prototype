@@ -31,7 +31,6 @@ def main():
                            tokenizer,
                            blanket_string=None,
                            with_token=True,
-                           with_context=False,
                            with_output=False)
     # Initialize the trainer
     trainer = launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)

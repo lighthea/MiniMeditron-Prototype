@@ -62,6 +62,9 @@ def replace_string_in_files(folder_path, old_string, new_string):
 def retrieve_prompt(file: str) -> str:
     with open(file, 'r') as f:
         data = json.load(f)
+
+    if "OUTPUT" not in data["prompt"]:
+        return data["prompt"]
     return data["prompt"].replace("OUTPUT", str(data["document_structure"]))
 
 
