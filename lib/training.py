@@ -31,8 +31,12 @@ def init_configs():
     # Initialize the quantization config
 
     bnb_config = BitsAndBytesConfig(
-        load_in_8bit=True,
+        load_in_4bit=True,
+        llm_int8_threshold=6.0,
         llm_int8_has_fp16_weight=True,
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
     )
 
     # Initialize the IA3 config
