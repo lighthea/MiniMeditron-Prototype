@@ -2,7 +2,7 @@
     "general_folders" : {
         "data_folder": "data",
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
-        "train_folder": "data/knowledge_database/generated_patients/structured_patients",
+        "train_folder": "data/knowledge_database/generated_patients/structured_guidelines",
         "base_folder": "data/structure/guidelines"
     },
 
@@ -15,11 +15,10 @@
     "model_parameters" : {
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
         "num_train_epochs": 2,
-        "batch_size": 1,
-        "n_context_guidelines": 3,
+        "batch_size": 2,
         "eval_steps" : 50,
         "logging_steps": 25,
-        "learning_rate": 1e-4,
+        "learning_rate": 5e-4,
         "max_steps": 2000,
         "test_size": 0.01,
         "run_name": "model2-qa",

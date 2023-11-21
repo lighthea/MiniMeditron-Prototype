@@ -19,7 +19,7 @@
         "n_context_guidelines": 3,
         "eval_steps" : 50,
         "logging_steps": 25,
-        "learning_rate": 5e-4,
+        "learning_rate": 1e-4,
         "max_steps": 2000,
         "test_size": 0.01,
         "run_name": "model2-qa",

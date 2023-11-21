@@ -79,7 +79,7 @@ def load_dataset(config: dict,
                 for line in f:
                     data = json.loads(line)
                     queries.append(data["structure"])
-                    labels.append(data["condition_name"])  # TODO: change to labels using utils.replace_string_in_files
+                    labels.append(data["label"])
 
     dataset = Dataset.from_dict({"text": queries, "labels": labels})
     del queries, labels
@@ -230,7 +230,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        neftune_noise_alpha=5,
+        dataset_batch_size=100,
     )
 
     return trainer

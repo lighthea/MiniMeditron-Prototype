@@ -1,0 +1,8 @@
+{
+  "description" : "Learn from a guideline",
+  "type" : "guideline",
+  "prompt" : "INPUT",
+  "document_structure": {
+
+  }
+}
