@@ -249,6 +249,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
                                                response_template=response_template_ids,
                                                tokenizer=tokenizer,
                                                mlm=False)
+    print(dataset["train"][0])
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -258,7 +259,6 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         data_collator=collator,
         dataset_text_field="text",
-        max_seq_length=4096,
     )
 
     return trainer
