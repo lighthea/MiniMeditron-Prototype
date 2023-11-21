@@ -238,7 +238,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
-    print(dataset["train"][0]["text"])
+
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
