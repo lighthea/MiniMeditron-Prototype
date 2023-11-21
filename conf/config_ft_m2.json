@@ -15,7 +15,7 @@
     "model_parameters" : {
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
         "num_train_epochs": 2,
-        "batch_size": 2,
+        "batch_size": 3,
         "n_context_guidelines": 3,
         "eval_steps" : 50,
         "logging_steps": 25,
