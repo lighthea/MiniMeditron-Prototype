@@ -31,12 +31,7 @@ def init_configs():
     # Initialize the quantization config
 
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        llm_int8_threshold=6.0,
-        llm_int8_has_fp16_weight=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
+        load_in_8bit=True,
     )
 
     # Initialize the IA3 config
@@ -274,7 +269,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         data_collator=collator,
         dataset_text_field="text",
-        max_seq_length=max_seq_length+1,
+           #max_seq_length=max_seq_length+1,
     )
 
     return trainer
