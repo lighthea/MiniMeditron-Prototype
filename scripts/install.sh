@@ -1,5 +1,5 @@
 # Checks if the git repository is cloned and if not, clones it.
-# Then installs the necessary requirements and runs the fine_tune_block.py file.
+# Then installs the necessary requirements and runs the qa_fine_tune.py file.
 export PATH=$PATH:/home/sallinen/.local/bin
 
 echo "Checking if the git repo is cloned"
