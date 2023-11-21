@@ -164,7 +164,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     tokenizer.padding_side = 'right'
 
     # Set up model for training
-    model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
     model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
