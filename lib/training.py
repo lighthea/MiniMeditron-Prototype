@@ -167,11 +167,10 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         output_dir=config["model_folders"]['output_dir'],
         num_train_epochs=config["model_parameters"]['num_train_epochs'],
         per_device_train_batch_size=config["model_parameters"]['batch_size'],
-        warmup_steps=50,
+        warmup_steps=5,
         gradient_checkpointing=False,
         max_steps=config["model_parameters"]['max_steps'],
         learning_rate=config["model_parameters"]["learning_rate"],
-        # Want about 10x smaller than the Mistral learning rate
         logging_steps=config["model_parameters"]["logging_steps"],
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
@@ -179,7 +178,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         evaluation_strategy="steps",  # Evaluate the model every logging step
         eval_steps=config["model_parameters"]["eval_steps"],  # Evaluate and save checkpoints every 50 steps
         do_eval=True,
-            report_to=["wandb"],
+        report_to=["wandb"],
         eval_accumulation_steps=1,
         run_name="proto0-1",
         neftune_noise_alpha=5,
@@ -222,10 +221,6 @@ def init_wandb_project(config: dict) -> None:
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
-    max_seq_length = 0
-    for example in tqdm(dataset["train"], desc="Estimating max seq length"):
-        max_seq_length = max(max_seq_length, len(tokenizer.encode(example["text"])))
-    print(f"Max seq length: {max_seq_length}")
 
     trainer = SFTTrainer(
         model=model,
@@ -236,7 +231,6 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         dataset_text_field="text",
         neftune_noise_alpha=5,
-        #max_seq_length=max_seq_length+1,
     )
 
     return trainer
