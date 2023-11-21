@@ -223,6 +223,11 @@ def init_wandb_project(config: dict) -> None:
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
+    max_seq_length = 0
+    for example in tqdm(dataset["train"], desc="Estimating max seq length"):
+        max_seq_length = max(max_seq_length, len(tokenizer.encode(example["text"])))
+    print(f"Max seq length: {max_seq_length}")
+
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -232,7 +237,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         dataset_text_field="text",
         neftune_noise_alpha=5,
-        max_seq_length=4096,
+        max_seq_length=max_seq_length+1,
     )
 
     return trainer
@@ -254,6 +259,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     max_seq_length = 0
     for example in tqdm(dataset["train"], desc="Estimating max seq length"):
         max_seq_length = max(max_seq_length, len(tokenizer.encode(example["text"])))
+    print(f"Max seq length: {max_seq_length}")
 
     trainer = SFTTrainer(
         model=model,
