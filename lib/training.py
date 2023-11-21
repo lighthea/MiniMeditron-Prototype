@@ -32,6 +32,8 @@ def init_configs():
 
     bnb_config = BitsAndBytesConfig(
         load_in_8bit=True,
+        llm_int8_has_fp16_weight=True,
+        llm_int8_enable_fp32_cpu_offload=True
     )
 
     # Initialize the IA3 config
@@ -115,8 +117,7 @@ def load_dataset(config: dict,
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
                 {"role": "assistant", "content": assistant_prompt}
-            ], tokenize=False,
-                add_generation_prompt=False)}
+            ], tokenize=False,  add_generation_prompt=False)}
 
         else:
             tokenized_output = {"text": tokenizer.apply_chat_template([
