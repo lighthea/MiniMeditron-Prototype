@@ -180,7 +180,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         do_eval=True,
         report_to=["wandb"],
         eval_accumulation_steps=1,
-        run_name="proto0-1",
+        run_name=config["model_parameters"]["run_name"],
         neftune_noise_alpha=5,
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
@@ -264,6 +264,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         data_collator=collator,
         dataset_text_field="text",
         max_seq_length=max_seq_length+1,
+        dataset_batch_size=100,
     )
 
     return trainer
