@@ -172,7 +172,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         max_steps=config["model_parameters"]['max_steps'],
         learning_rate=config["model_parameters"]["learning_rate"],
         # Want about 10x smaller than the Mistral learning rate
-        logging_steps=config["model_parameters"]["eval_steps"],
+        logging_steps=config["model_parameters"]["logging_steps"],
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
         save_steps=config["model_parameters"]["eval_steps"],  # Save checkpoints every 50 steps
