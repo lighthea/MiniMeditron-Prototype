@@ -123,13 +123,16 @@ def load_dataset(config: dict,
                 {"role": "user", "content": example["query"]},
             ], tokenize=False,  add_generation_prompt=False)}
 
-        if with_token:
-            # Put the tokenized output in the correct format
-            tokenized_output["input_ids"] = tokenizer.encode(tokenized_output["text"], add_special_tokens=True, padding="max_length",)
-
         return tokenized_output
 
+    def tokenize(example):
+      return tokenizer.encode(example["text"], add_special_tokens=True,
+                                                             padding="max_length", )
+
     dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
+    if with_token:
+        dataset = dataset.map(tokenize)
+
     dataset = dataset.shuffle()
     dataset = dataset.train_test_split(test_size=config["model_parameters"]["test_size"], shuffle=True)
 
