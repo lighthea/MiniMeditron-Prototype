@@ -124,6 +124,10 @@ def load_dataset(config: dict,
                 {"role": "user", "content": example["query"]},
             ], tokenize=with_token, padding="max_length", add_generation_prompt=False, max_length=4096)}
 
+        if with_token:
+            # Put the tokenized output in the correct format
+            tokenized_output["input_ids"] = tokenized_output["text"]["input_ids"]
+
         return tokenized_output
 
     dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
@@ -244,7 +248,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
                                                response_template=response_template_ids,
                                                tokenizer=tokenizer,
                                                mlm=False)
-
+    print(dataset["train"])
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
