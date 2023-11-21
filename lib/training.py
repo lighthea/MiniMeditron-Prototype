@@ -115,18 +115,17 @@ def load_dataset(config: dict,
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
                 {"role": "assistant", "content": assistant_prompt}
-            ], tokenize=with_token, padding="max_length",
-                add_generation_prompt=False,
-                max_length=4096)}
+            ], tokenize=False,
+                add_generation_prompt=False)}
 
         else:
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
-            ], tokenize=with_token, padding="max_length", add_generation_prompt=False, max_length=4096)}
+            ], tokenize=False,  add_generation_prompt=False)}
 
         if with_token:
             # Put the tokenized output in the correct format
-            tokenized_output["input_ids"] = tokenized_output["text"]["input_ids"]
+            tokenized_output["input_ids"] = tokenizer.encode(tokenized_output["text"], add_special_tokens=True, padding="max_length",)
 
         return tokenized_output
 
