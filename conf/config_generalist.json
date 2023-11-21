@@ -16,7 +16,7 @@
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
         "baseline_name" : "generalist-model",
         "num_train_epochs": 2,
-        "batch_size": 2,
+        "batch_size": 3,
         "eval_steps" : 50,
         "logging_steps": 25,
         "learning_rate": 5e-4,
