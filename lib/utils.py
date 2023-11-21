@@ -20,8 +20,10 @@ def decode_predictions(tokenizer, eval_predictions: EvalPrediction):
     print(eval_predictions.predictions[0])
 
     preds = [np.where(pred != -100, pred, tokenizer.pad_token_id) for pred in eval_predictions.predictions]
-    prediction_text = tokenizer.batch_decode(preds[0].astype(int), skip_special_tokens=True, clean_up_tokenization_spaces=True)
+    prediction_text = tokenizer.batch_decode(preds[0].astype(int), skip_special_tokens=True,
+                                             clean_up_tokenization_spaces=True)
     return {"labels": labels, "predictions": prediction_text}
+
 
 def yield_structured_obj(folder):
     for file in sorted(os.listdir(folder)):
@@ -80,4 +82,3 @@ def repair_json(json_string):
     repaired_json_string = re.sub(r',\s*([\]}])', r'\1', json_string)
     return (repaired_json_string.replace("'s", "s")
             .replace("'", '"'))
-
