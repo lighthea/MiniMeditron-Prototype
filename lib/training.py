@@ -264,7 +264,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         model=model,
         tokenizer=tokenizer,
         args=train_args,
-        train_dataset=dataset["train"].select(range(100)),
+        train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         data_collator=collator,
