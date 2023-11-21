@@ -121,13 +121,14 @@ def load_dataset(config: dict,
         else:
             tokenized_output = {"text": tokenizer.apply_chat_template([
                 {"role": "user", "content": example["query"]},
-            ], tokenize=False,  add_generation_prompt=False)}
+            ], tokenize=False, add_generation_prompt=False)}
 
         return tokenized_output
 
     def tokenize(example):
-      return tokenizer.encode(example["text"], add_special_tokens=True,
-                                                             padding="max_length", )
+        tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
+                                     padding="max_length")
+        return {"input_ids": tokenized}
 
     dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
     if with_token:
@@ -243,8 +244,8 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     if dataset["train"][0]["text"][0].startswith(instruction_template):
         instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
     else:
-        instruction_template_ids = tokenizer.encode("\n"+instruction_template, add_special_tokens=False)[2:]
-    response_template_ids = tokenizer.encode("\n"+response_template, add_special_tokens=False)[2:]
+        instruction_template_ids = tokenizer.encode("\n" + instruction_template, add_special_tokens=False)[2:]
+    response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
 
     collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
                                                response_template=response_template_ids,
