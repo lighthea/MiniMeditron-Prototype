@@ -183,7 +183,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         report_to=["wandb"],
         eval_accumulation_steps=1,
         run_name="proto0-1",
-        neftune_noise_alpha=5,
+        #neftune_noise_alpha=5,
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
         bf16_full_eval=torch.cuda.is_bf16_supported(),
