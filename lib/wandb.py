@@ -66,7 +66,6 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
 
 def retrieve_checkpoint(config: dict) -> str | None:
     run = wandb.init()
-    print(config["model_parameters"])
     artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/{str(config["model_parameters"]["baseline_name"])}:v1',
                                 type='model')
     artifact_dir = artifact.download()

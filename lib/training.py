@@ -152,7 +152,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     # Initialize the accelerator and quantization configs
     model = None
     if config["model_parameters"]["start_from_checkpoint"]:
-        model = AutoModelForCausalLM.from_pretrained(retrieve_checkpoint(config["model_parameters"]["baseline_name"]),
+        model = AutoModelForCausalLM.from_pretrained(retrieve_checkpoint(config),
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=True
                                                      )
