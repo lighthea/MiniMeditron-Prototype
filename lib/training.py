@@ -167,7 +167,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         output_dir=config["model_folders"]['output_dir'],
         num_train_epochs=config["model_parameters"]['num_train_epochs'],
         per_device_train_batch_size=config["model_parameters"]['batch_size'],
-        warmup_steps=5,
+        warmup_steps=50,
         gradient_checkpointing=False,
         max_steps=config["model_parameters"]['max_steps'],
         learning_rate=config["model_parameters"]["learning_rate"],
@@ -179,7 +179,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         evaluation_strategy="steps",  # Evaluate the model every logging step
         eval_steps=config["model_parameters"]["eval_steps"],  # Evaluate and save checkpoints every 50 steps
         do_eval=True,
-        report_to=["wandb"],
+            report_to=["wandb"],
         eval_accumulation_steps=1,
         run_name="proto0-1",
         neftune_noise_alpha=5,
@@ -264,12 +264,12 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         model=model,
         tokenizer=tokenizer,
         args=train_args,
-        train_dataset=dataset["train"],
+        train_dataset=dataset["train"].select(range(100)),
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         data_collator=collator,
         dataset_text_field="text",
-           #max_seq_length=max_seq_length+1,
+        max_seq_length=max_seq_length+1,
     )
 
     return trainer
