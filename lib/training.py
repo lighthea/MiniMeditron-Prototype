@@ -4,7 +4,7 @@ import os
 import torch
 import wandb
 from datasets import Dataset, DatasetDict
-from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
+from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model, prepare_model_for_int8_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
@@ -160,7 +160,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     tokenizer.padding_side = 'right'
 
     # Set up model for training
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
+    #model = prepare_model_for_int8_training(model, use_gradient_checkpointing=False)
     model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
