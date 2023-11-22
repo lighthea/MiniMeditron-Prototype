@@ -65,11 +65,8 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
 
 
 def retrieve_checkpoint(config: dict) -> str | None:
-    os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-    os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
-
-    run = wandb.init()
-    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{str(config["wandb_parameters"]["baseline_name"])}:v0',
+    run = wandb.init(entity="alex-sallinen")
+    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{str(config["wandb_parameters"]["baseline_name"])}:latest',
                                 type='model')
     artifact_dir = artifact.download()
     return artifact_dir
