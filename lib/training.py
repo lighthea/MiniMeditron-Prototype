@@ -173,8 +173,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
-    if not config["wandb_parameters"]["start_from_checkpoint"]:
-        model = get_peft_model(model, ia3_config)
+    model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
     train_args = TrainingArguments(
