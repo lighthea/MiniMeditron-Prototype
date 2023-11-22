@@ -38,7 +38,7 @@ def main():
     def reward_model(x):
         return torch.rand(10)
 
-    train_dataset: DatasetDict = load_dataset(config, tokenizer, None, with_context=True, with_token=False, with_output=False)
+    train_dataset: DatasetDict = load_dataset(config, tokenizer, None, with_token=False, with_output=False)
     train_dataset = train_dataset.rename_column("text", "query")
 
     def tokenize(sample):
@@ -77,7 +77,7 @@ def main():
         rewards = [torch.tensor(output[1]["score"]) for output in pipe_outputs]
 
         # Run PPO step
-        stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
+        stats = ppo_trainer.step(query_tensors, [response_tensors], rewards)
         ppo_trainer.log_stats(stats, batch, rewards)
         print(stats)
 

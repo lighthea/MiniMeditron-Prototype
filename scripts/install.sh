@@ -33,4 +33,4 @@ mkdir data/knowledge_database/generated_patients
 unzip data/structured_patients.zip -d data/knowledge_database/generated_patients
 unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
 
-cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
+exec cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)

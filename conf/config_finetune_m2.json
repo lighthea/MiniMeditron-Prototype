@@ -13,6 +13,7 @@
     },
 
     "model_parameters" : {
+        "task": "qa",
         "start_from_checkpoint": true,
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
         "baseline_name" : "generalist-model",

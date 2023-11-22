@@ -165,7 +165,6 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
     tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.padding_side = 'right'
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
@@ -227,7 +226,7 @@ def init_wandb_project(config: dict) -> None:
 
     if len(config["wandb_parameters"]["wandb_project"]) > 0:
         os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
@@ -247,7 +246,7 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        dataset_batch_size=100,
+        dataset_batch_size=10,
     )
 
     return trainer
@@ -281,7 +280,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         data_collator=collator,
         dataset_text_field="text",
         max_seq_length=max_seq_length + 1,
-        dataset_batch_size=100,
+        dataset_batch_size=10,
     )
 
     return trainer
