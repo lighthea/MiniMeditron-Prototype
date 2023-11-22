@@ -182,7 +182,6 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         gradient_checkpointing=False,
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
-        save_steps=config["model_parameters"]["eval_steps"],  # Save checkpoints every 50 steps
         evaluation_strategy="steps",  # Evaluate the model every logging step
         do_eval=True,
         report_to=["wandb"],
