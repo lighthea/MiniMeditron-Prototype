@@ -1,4 +1,9 @@
 {
+    "general_settings" : {
+            "process_file": "data/structure/pipelines/pipeline_2.json",
+            "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
+            "task": "qa"
+    },
     "general_folders" : {
         "data_folder": "data",
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
@@ -12,29 +17,29 @@
         "save_path": "data/exports/finetuned_models/model2_qa/checkpoints"
     },
 
+    "dataset_generation" : {
+        "force_retokenize": false,
+        "n_context_guidelines": 3,
+        "with_token": true,
+        "with_output": true,
+        "test_size": 0.01
+
+    },
+
     "model_parameters" : {
-        "task": "qa",
-        "start_from_checkpoint": true,
-        "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-        "baseline_name" : "generalist-model",
         "num_train_epochs": 2,
         "batch_size": 1,
-        "n_context_guidelines": 3,
         "eval_steps" : 50,
         "logging_steps": 25,
         "learning_rate": 1e-5,
-        "max_steps": 2000,
-        "test_size": 0.01,
-        "run_name": "model2-qa",
-        "process_file": "data/structure/pipelines/pipeline_2.json"
+        "max_steps": 2000
     },
 
     "wandb_parameters" : {
+        "start_from_checkpoint": true,
+        "baseline_name" : "generalist-model",
+        "run_name": "model2-qa",
         "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
         "wandb_project": "minimed-finetune-proto0"
-    },
-
-    "other_parameters" : {
-        "force_retokenize": false
     }
 }

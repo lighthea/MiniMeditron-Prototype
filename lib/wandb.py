@@ -69,7 +69,7 @@ def retrieve_checkpoint(config: dict) -> str | None:
     os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
     run = wandb.init()
-    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/{str(config["model_parameters"]["baseline_name"])}:v1',
+    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/{str(config["wandb_parameters"]["baseline_name"])}:v1',
                                 type='model')
     artifact_dir = artifact.download()
     return artifact_dir

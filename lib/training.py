@@ -15,7 +15,7 @@ from lib.wandb import retrieve_checkpoint
 
 
 def blanket(config: dict) -> str:
-    file = config["model_parameters"]['process_file']
+    file = config["general_settings"]['process_file']
     with open(file, 'r') as f:
         data = json.load(f)
 
@@ -55,14 +55,18 @@ def init_configs():
 
 
 def load_dataset(config: dict,
-                 tokenizer,
-                 blanket_string: str = None,
-                 with_output: bool = True,
-                 with_token: bool = False) -> DatasetDict:
+                 tokenizer) -> DatasetDict:
+
+    with_output = config["dataset_generation"]["with_output"]
+    with_token = config["dataset_generation"]["with_token"]
+    blanket_string = None
+    if with_output:
+        blanket_string = blanket(config)
+
     # Check if the dataset has already been tokenized
     print("Checking if tokenized dataset exists")
     if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
-            not config["other_parameters"]['force_retokenize']):
+            not config["dataset_generation"]['force_retokenize']):
         # check if directory is not empty
         if os.listdir(config["model_folders"]['tokenized_data_path']):
             print("Loading tokenized dataset")
@@ -84,13 +88,13 @@ def load_dataset(config: dict,
     dataset = Dataset.from_dict({"text": queries, "labels": labels})
     del queries, labels
 
-    partial_prompt = retrieve_prompt(config["model_parameters"]['process_file'])
+    partial_prompt = retrieve_prompt(config["general_settings"]['process_file'])
     with_context = "CONTEXT" in partial_prompt
 
     # Append the guidelines to the dataset if needed
     if with_context:
         dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
-                             n=config["model_parameters"]['n_context_guidelines'],
+                             n=config["dataset_generation"]['n_context_guidelines'],
                              base_folder=config["general_folders"]['base_folder'])
 
     # Merge the query and context into a single string using the prompt defined in the structure file
@@ -136,7 +140,7 @@ def load_dataset(config: dict,
         dataset = dataset.map(tokenize)
 
     dataset = dataset.shuffle()
-    dataset = dataset.train_test_split(test_size=config["model_parameters"]["test_size"], shuffle=True)
+    dataset = dataset.train_test_split(test_size=config["dataset_generation"]["test_size"], shuffle=True)
 
     # Create the folder if it doesn't exist
     if not os.path.exists(config["model_folders"]['tokenized_data_path']):
@@ -150,52 +154,46 @@ def load_dataset(config: dict,
 
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
-    model = None
-    if config["model_parameters"]["start_from_checkpoint"]:
-        model = AutoModelForCausalLM.from_pretrained(retrieve_checkpoint(config),
+    if config["wandb_parameters"]["start_from_checkpoint"]:
+        folder = retrieve_checkpoint(config)
+        model = AutoModelForCausalLM.from_pretrained(folder,
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=True
                                                      )
+        tokenizer = AutoTokenizer.from_pretrained(folder)
     else:
-        model = AutoModelForCausalLM.from_pretrained(config["model_parameters"]['base_model_id'],
+        model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=True
                                                      )
 
-    # Initialize the tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(config["model_parameters"]['base_model_id'])
-    tokenizer.pad_token = tokenizer.eos_token
+        # Initialize the tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'])
+        tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
-    if not config["model_parameters"]["start_from_checkpoint"]:
+    if not config["wandb_parameters"]["start_from_checkpoint"]:
         model = get_peft_model(model, ia3_config)
 
     print({"trainable_params": model.print_trainable_parameters()})
     train_args = TrainingArguments(
         output_dir=config["model_folders"]['output_dir'],
-        num_train_epochs=config["model_parameters"]['num_train_epochs'],
-        per_device_train_batch_size=config["model_parameters"]['batch_size'],
         warmup_steps=5,
         gradient_checkpointing=False,
-        max_steps=config["model_parameters"]['max_steps'],
-        learning_rate=config["model_parameters"]["learning_rate"],
-        logging_steps=config["model_parameters"]["logging_steps"],
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
         save_steps=config["model_parameters"]["eval_steps"],  # Save checkpoints every 50 steps
         evaluation_strategy="steps",  # Evaluate the model every logging step
-        eval_steps=config["model_parameters"]["eval_steps"],  # Evaluate and save checkpoints every 50 steps
         do_eval=True,
         report_to=["wandb"],
-        eval_accumulation_steps=1,
-        run_name=config["model_parameters"]["run_name"],
-        neftune_noise_alpha=5,
+        run_name=config["wandb_project"]["run_name"],
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
         bf16_full_eval=torch.cuda.is_bf16_supported(),
         fp16=not torch.cuda.is_bf16_supported(),
         fp16_full_eval=not torch.cuda.is_bf16_supported(),
+        **config["model_parameters"]
     )
 
     return model, tokenizer, train_args
@@ -230,14 +228,13 @@ def init_wandb_project(config: dict) -> None:
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
-    if config["model_parameters"]["task"] == "qa":
+    if config["general_settings"]["task"] == "qa":
         return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
-    elif config["model_parameters"]["task"] == "finetune":
+    elif config["general_settings"]["task"] == "finetune":
         return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
-
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,

@@ -1,5 +1,5 @@
 # Checks if the git repository is cloned and if not, clones it.
-# Then installs the necessary requirements and runs the qa_fine_tune.py file.
+# Then installs the necessary requirements and runs the fine_tune.py file.
 export PATH=$PATH:/home/sallinen/.local/bin
 
 echo "Checking if the git repo is cloned"
@@ -33,4 +33,7 @@ mkdir data/knowledge_database/generated_patients
 unzip data/structured_patients.zip -d data/knowledge_database/generated_patients
 unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
 
-exec cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
+cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
+
+echo "Running the fine_tune.py file"
+exec python fine_tune.py "$1"

@@ -3,10 +3,9 @@ IMG_PROJECT=mlo-sallinen-meditron
 IMG_NAME=prot0
 
 runai submit \
-		--name "sandbox" \
-		--interactive \
-		--gpu 1 \
+		--name "finetune-minimeditron" \
+		--gpu 8 \
 		--image $REGISTRY/$IMG_PROJECT/$IMG_NAME:latest \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen" \
-    --command -- /entrypoint_new.sh sleep infinity
+    --command -- /entrypoint_new.sh install.sh "$1"
