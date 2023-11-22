@@ -8,9 +8,6 @@ from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
-from accelerate import FullyShardedDataParallelPlugin, Accelerator
-from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
-
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
 from lib.wandb import retrieve_checkpoint
