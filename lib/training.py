@@ -186,7 +186,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         evaluation_strategy="steps",  # Evaluate the model every logging step
         do_eval=True,
         report_to=["wandb"],
-        run_name=config["wandb_project"]["run_name"],
+        run_name=config["wandb_parameters"]["run_name"],
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
         bf16_full_eval=torch.cuda.is_bf16_supported(),
