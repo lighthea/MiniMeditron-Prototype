@@ -4,10 +4,12 @@ import os
 import torch
 import wandb
 from datasets import Dataset, DatasetDict
-from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model, prepare_model_for_int8_training
+from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+from accelerate import FullyShardedDataParallelPlugin, Accelerator
+from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
@@ -160,7 +162,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=True
                                                      )
-        tokenizer = AutoTokenizer.from_pretrained(folder)
+        tokenizer = AutoTokenizer.from_pretrained(folder, add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
@@ -168,7 +170,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
                                                      )
 
         # Initialize the tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'])
+        tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'], add_eos_token=True)
         tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
