@@ -168,7 +168,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is QA based, format the chat for the QA task
     dataset = dataset.map(lambda x: format_chat_for_qa(x, config, tokenizer),
-                          remove_columns=["query", "labels"])
+                          remove_columns=["query", "labels" if config["general_settings"]["task"] != "po" else None])
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":

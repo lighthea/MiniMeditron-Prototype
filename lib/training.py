@@ -162,6 +162,7 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
         padding_value=tokenizer.pad_token_id,
         label_pad_token_id=tokenizer.pad_token_id,
         truncation_mode="keep_end",
+        generate_during_eval=True,
     )
 
     return trainer
