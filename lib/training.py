@@ -3,6 +3,7 @@ import os
 
 import torch
 import wandb
+from accelerate import Accelerator
 from datasets import Dataset, DatasetDict
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
@@ -51,13 +52,13 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         model = AutoModelForCausalLM.from_pretrained(folder,
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
-                                                     )
+                                                     , device_map={"":Accelerator().process_index})
         tokenizer = AutoTokenizer.from_pretrained(folder, add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
-                                                     )
+                                                     , device_map={"":Accelerator().process_index})
 
         # Initialize the tokenizer
         tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'], add_eos_token=True)
