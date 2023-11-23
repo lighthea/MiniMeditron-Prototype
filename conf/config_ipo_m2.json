@@ -29,9 +29,10 @@
     "model_parameters" : {
         "num_train_epochs": 2,
         "per_device_train_batch_size": 1,
-        "eval_steps" : 50,
+        "per_device_eval_batch_size": 1,
+        "eval_steps" : 25,
         "save_steps": 50,
-        "logging_steps": 25,
+        "logging_steps": 10,
         "learning_rate": 5e-5,
         "max_steps": 2000,
         "neftune_noise_alpha": 5,
