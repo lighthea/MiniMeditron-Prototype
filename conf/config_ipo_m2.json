@@ -19,7 +19,7 @@
     "dataset_generation" : {
         "force_retokenize": false,
         "n_context_guidelines": 3,
-        "with_token": true,
+        "with_token": false,
         "with_output": false,
         "test_size": 0.01
 

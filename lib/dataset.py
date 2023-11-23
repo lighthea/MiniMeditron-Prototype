@@ -181,7 +181,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     if config["general_settings"]["task"] == "po":
         dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset, tokenizer))
         dataset.rename_column("text", "prompt")
-
+        dataset.remove_columns(["text"])
     dataset.remove_columns(["labels"])
 
     def tokenize(example):
