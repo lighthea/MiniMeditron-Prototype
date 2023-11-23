@@ -7,19 +7,10 @@ from datasets import Dataset, DatasetDict
 from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
 from lib.wandb import retrieve_checkpoint
-
-
-def blanket(config: dict) -> str:
-    file = config["general_settings"]['process_file']
-    with open(file, 'r') as f:
-        data = json.load(f)
-
-    data["document_structure"]["Condition"] = "LABEL"
-    return json.dumps(data["document_structure"])
 
 
 def init_configs():
@@ -51,104 +42,6 @@ def init_configs():
     )
 
     return bnb_config, ia3_config
-
-
-def load_dataset(config: dict,
-                 tokenizer) -> DatasetDict:
-
-    with_output = config["dataset_generation"]["with_output"]
-    with_token = config["dataset_generation"]["with_token"]
-    blanket_string = None
-    if with_output:
-        blanket_string = blanket(config)
-
-    # Check if the dataset has already been tokenized
-    print("Checking if tokenized dataset exists")
-    if (os.path.exists(config["model_folders"]['tokenized_data_path']) and
-            not config["dataset_generation"]['force_retokenize']):
-        # check if directory is not empty
-        if os.listdir(config["model_folders"]['tokenized_data_path']):
-            print("Loading tokenized dataset")
-            # Load the tokenized dataset
-            dataset = DatasetDict.load_from_disk(config["model_folders"]['tokenized_data_path'])
-            return dataset
-
-    # For each patient, retrieve the top k guidelines
-    queries = []
-    labels = []
-    for file in tqdm(os.listdir(config["general_folders"]['train_folder']), desc="Loading dataset"):
-        if file.endswith(".jsonl"):
-            with open(os.path.join(config["general_folders"]['train_folder'], file)) as f:
-                for line in f:
-                    data = json.loads(line)
-                    queries.append(data["structure"])
-                    labels.append(data["label"])
-
-    dataset = Dataset.from_dict({"text": queries, "labels": labels})
-    del queries, labels
-
-    partial_prompt = retrieve_prompt(config["general_settings"]['process_file'])
-    with_context = "CONTEXT" in partial_prompt
-
-    # Append the guidelines to the dataset if needed
-    if with_context:
-        dataset = batch_bm25(dataset, config["general_folders"]['guidelines_folder'],
-                             n=config["dataset_generation"]['n_context_guidelines'],
-                             base_folder=config["general_folders"]['base_folder'])
-
-    # Merge the query and context into a single string using the prompt defined in the structure file
-    if with_context:
-        dataset = dataset.map(lambda x: {"query": partial_prompt
-                              .replace("INPUT", str(x["text"]))
-                              .replace("CONTEXT", str(x["context"]))}
-                              , remove_columns=["text", "context"])
-    else:
-        dataset = dataset.map(lambda x: {"query": partial_prompt
-                              .replace("INPUT", str(x["text"]))}
-                              , remove_columns=["text"])
-    print(dataset)
-
-    # Tokenize the dataset
-    def transform_example(example):
-        assistant_prompt = ""
-        if with_output:
-            if blanket_string is None:
-                assistant_prompt = example["labels"]
-            else:
-                assistant_prompt = blanket_string.replace("LABEL", example["labels"])
-
-            tokenized_output = {"text": tokenizer.apply_chat_template([
-                {"role": "user", "content": example["query"]},
-                {"role": "assistant", "content": assistant_prompt}
-            ], tokenize=False, add_generation_prompt=False)}
-
-        else:
-            tokenized_output = {"text": tokenizer.apply_chat_template([
-                {"role": "user", "content": example["query"]},
-            ], tokenize=False, add_generation_prompt=False)}
-
-        return tokenized_output
-
-    def tokenize(example):
-        tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
-                                     padding="max_length")
-        return {"input_ids": tokenized}
-
-    dataset = dataset.map(transform_example, remove_columns=["query", "labels"])
-    if with_token:
-        dataset = dataset.map(tokenize)
-
-    dataset = dataset.shuffle()
-    dataset = dataset.train_test_split(test_size=config["dataset_generation"]["test_size"], shuffle=True)
-
-    # Create the folder if it doesn't exist
-    if not os.path.exists(config["model_folders"]['tokenized_data_path']):
-        os.makedirs(config["model_folders"]['tokenized_data_path'])
-
-    # Save the tokenized dataset
-    dataset.save_to_disk(config["model_folders"]['tokenized_data_path'])
-
-    return dataset
 
 
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
@@ -228,6 +121,8 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
     elif config["general_settings"]["task"] == "finetune":
         return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
+    elif config["general_settings"]["task"] == "po":
+        return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
@@ -240,6 +135,33 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
         peft_config=ia3_conf,
         dataset_text_field="text",
         dataset_batch_size=10,
+    )
+
+    return trainer
+
+
+def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
+    max_seq_length = max(len(tokenizer.encode(example["prompt"])) for example in
+                         tqdm(dataset["train"], desc="Estimating max prompt length"))
+    print(f"Max prompt length: {max_seq_length}")
+    max_target_length = max(len(tokenizer.encode(example["chosen"])) for example in
+                            tqdm(dataset["train"], desc="Estimating max target length"))
+    print(f"Max target length: {max_target_length}")
+    trainer = DPOTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=train_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        peft_config=ia3_conf,
+        loss_type="ipo",
+        beta=0.1,
+        max_length=max_seq_length,
+        max_prompt_length=max_seq_length,
+        max_target_length=max_target_length,
+        padding_value=tokenizer.pad_token_id,
+        label_pad_token_id=tokenizer.pad_token_id,
+        truncation_mode="keep_end",
     )
 
     return trainer
@@ -258,9 +180,8 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
                                                mlm=False)
 
     # Determine max seq length
-    max_seq_length = 0
-    for example in tqdm(dataset["train"], desc="Estimating max seq length"):
-        max_seq_length = max(max_seq_length, len(tokenizer.encode(example["text"])))
+    max_seq_length = max(len(tokenizer.encode(example["text"])) for example in tqdm(dataset["train"],
+                                                                                    desc="Estimating max seq length"))
     print(f"Max seq length: {max_seq_length}")
 
     trainer = SFTTrainer(

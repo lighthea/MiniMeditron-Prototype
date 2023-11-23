@@ -4,9 +4,11 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import init_configs, setup_model_and_training_finetuning, load_dataset, create_all_path, \
+from lib.training import init_configs, setup_model_and_training_finetuning, create_all_path, \
     load_config, \
     init_wandb_project, launch_training
+
+from lib.dataset import load_dataset
 
 
 def main():
