@@ -65,9 +65,8 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
 
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=False)
-    model = get_peft_model(model, ia3_config)
+    # model = get_peft_model(model, ia3_config)
 
-    print({"trainable_params": model.print_trainable_parameters()})
     train_args = TrainingArguments(
         output_dir=config["model_folders"]['output_dir'],
         warmup_steps=5,
@@ -126,6 +125,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
+
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -150,6 +150,7 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
     max_target_length = max(len(tokenizer.encode(example["chosen"])) for example in
                             tqdm(dataset["train"], desc="Estimating max target length"))
     print(f"Max target length: {max_target_length}")
+
     trainer = DPOTrainer(
         model=model,
         tokenizer=tokenizer,
