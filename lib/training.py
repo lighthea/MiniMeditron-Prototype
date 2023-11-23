@@ -50,13 +50,13 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         folder = retrieve_checkpoint(config)
         model = AutoModelForCausalLM.from_pretrained(folder,
                                                      quantization_config=bnb_config,
-                                                     use_flash_attention_2=True
+                                                     use_flash_attention_2=config["general_settings"]["use_flash_attn"]
                                                      )
         tokenizer = AutoTokenizer.from_pretrained(folder, add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
-                                                     use_flash_attention_2=True
+                                                     use_flash_attention_2=config["general_settings"]["use_flash_attn"]
                                                      )
 
         # Initialize the tokenizer
@@ -151,7 +151,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
                             tqdm(dataset["train"], desc="Estimating max target length"))
     print(f"Max target length: {max_target_length}")
 
-    # tokenizer.padding_side = "left"
     trainer = DPOTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -164,8 +163,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
         max_length=max_seq_length,
         max_prompt_length=max_seq_length,
         max_target_length=max_target_length,
-        padding_value=tokenizer.pad_token_id,
-        label_pad_token_id=tokenizer.pad_token_id,
         truncation_mode="keep_end",
         # generate_during_eval=True,
     )

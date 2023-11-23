@@ -5,7 +5,9 @@
             "task": "finetune"
     },
     "general_folders" : {
-        "train_folder": "data/knowledge_database/guidelines/structured_guidelines"
+        "train_folder": "data/knowledge_database/guidelines/structured_guidelines",
+        "use_flash_attn": true
+
     },
 
     "model_folders" : {

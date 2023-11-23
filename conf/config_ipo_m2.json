@@ -2,7 +2,8 @@
     "general_settings" : {
             "process_file": "data/structure/pipelines/pipeline_2.json",
             "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-            "task": "po"
+            "task": "po",
+            "use_flash_attn": false
     },
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
