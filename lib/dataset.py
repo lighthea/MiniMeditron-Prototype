@@ -152,7 +152,7 @@ def save_dataset(dataset: Dataset, config: dict):
 
     # Save the tokenized dataset
     dataset.save_to_disk(config["model_folders"]['tokenized_data_path'])
-
+    return dataset
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
@@ -194,6 +194,6 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
         dataset = dataset.map(tokenize)
 
     # Save the dataset
-    save_dataset(dataset, config)
+    dataset = save_dataset(dataset, config)
 
     return dataset
