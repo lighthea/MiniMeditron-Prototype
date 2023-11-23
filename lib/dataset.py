@@ -180,9 +180,8 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
         dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset, tokenizer))
-        dataset.rename_column("text", "prompt")
-        dataset.remove_columns(["text"])
-    dataset.remove_columns(["labels"])
+        dataset = dataset.rename_column("text", "prompt")
+    dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
         tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
