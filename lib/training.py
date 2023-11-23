@@ -141,6 +141,9 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
 
 
 def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
+    # Print dataset structure
+    print(dataset["train"])
+    # Determine max seq length
     max_seq_length = max(len(tokenizer.encode(example["prompt"])) for example in
                          tqdm(dataset["train"], desc="Estimating max prompt length"))
     print(f"Max prompt length: {max_seq_length}")
