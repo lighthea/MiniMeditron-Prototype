@@ -124,10 +124,17 @@ def format_chat_for_qa(example, config, tokenizer):
     return {"text": tokenized_output}
 
 
-def format_chat_for_preference_optimisation(example, dataset: Dataset):
+def format_chat_for_preference_optimisation(example, dataset: Dataset, tokenizer):
     # select a wrong label
     wrong_label = random.choice([label for label in dataset["labels"] if label != example['labels']])
-    return {"rejected": wrong_label}
+    chat_template_wrong = [{"role": "assistant",
+                            "content": wrong_label}]
+    chat_template_right = [{"role": "assistant",
+                            "content": example["labels"]}]
+    tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False, add_generation_prompt=False)
+    tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False, add_generation_prompt=False)
+
+    return {"rejected": tokenized_output_wrong, "chosen" : tokenized_output_right}
 
 
 def save_dataset(dataset: Dataset, config: dict):
@@ -168,13 +175,14 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is QA based, format the chat for the QA task
     dataset = dataset.map(lambda x: format_chat_for_qa(x, config, tokenizer),
-                          remove_columns=["query", "labels" if config["general_settings"]["task"] != "po" else None])
+                          remove_columns=["query"])
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
-        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset))
-        dataset.rename_column("labels", "chosen")
+        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset, tokenizer))
         dataset.rename_column("text", "prompt")
+
+    dataset.remove_columns(["labels"])
 
     def tokenize(example):
         tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
