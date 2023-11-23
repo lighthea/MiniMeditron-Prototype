@@ -1,5 +1,5 @@
 # Checks if the git repository is cloned and if not, clones it.
-# Then installs the necessary requirements and runs the fine_tune.py file.
+# Then installs the necessary requirements and runs the train.py file.
 export PATH=$PATH:/home/sallinen/.local/bin
 
 echo "Checking if the git repo is cloned"
@@ -36,4 +36,4 @@ unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
 cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
 
 echo "Running the fine_tune.py file"
-exec accelerate launch --config_file conf/accelerate_config.yaml src/fine_tune.py "$1"
+exec accelerate launch --config_file conf/accelerate_config.yaml src/train.py "$1"
