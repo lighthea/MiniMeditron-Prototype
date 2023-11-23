@@ -38,7 +38,7 @@
         "eval_accumulation_steps": 1,
         "remove_unused_columns": false,
         "gradient_checkpointing": true,
-        "gradient_accumulation_steps": 4,
+        "gradient_accumulation_steps": 4
     },
 
     "wandb_parameters" : {
