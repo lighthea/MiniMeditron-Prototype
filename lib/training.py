@@ -151,6 +151,7 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
                             tqdm(dataset["train"], desc="Estimating max target length"))
     print(f"Max target length: {max_target_length}")
 
+    tokenizer.padding_side = "left"
     trainer = DPOTrainer(
         model=model,
         tokenizer=tokenizer,
