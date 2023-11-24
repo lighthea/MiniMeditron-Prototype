@@ -29,22 +29,23 @@ def init_configs(config):
     # Initialize the IA3 config
     if config["wandb_parameters"]["start_from_checkpoint"]:
         config["chekpoint_folder"] = retrieve_checkpoint(config)
-        ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
-    else:
-        ia3_config = IA3Config(
-            task_type="CAUSAL_LM",
-            target_modules=[
-                "q_proj",
-                "k_proj",
-                "v_proj",
-                "o_proj",
-                "gate_proj",
-                "up_proj",
-                "down_proj",
-                "lm_head",
-            ],
-            feedforward_modules=["down_proj"]
-        )
+        #ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
+
+
+    ia3_config = IA3Config(
+        task_type="CAUSAL_LM",
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head",
+        ],
+        feedforward_modules=["down_proj"]
+    )
 
     return bnb_config, ia3_config
 
