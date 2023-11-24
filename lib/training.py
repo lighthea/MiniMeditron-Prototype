@@ -14,7 +14,7 @@ from lib.utils import retrieve_prompt
 from lib.wandb import retrieve_checkpoint
 
 
-def init_configs():
+def init_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()
     float_type = torch.bfloat16 if bf16_support else torch.float16
     print(f"Using {float_type} for training")
@@ -27,20 +27,24 @@ def init_configs():
     )
 
     # Initialize the IA3 config
-    ia3_config = IA3Config(
-        task_type="CAUSAL_LM",
-        target_modules=[
-            "q_proj",
-            "k_proj",
-            "v_proj",
-            "o_proj",
-            "gate_proj",
-            "up_proj",
-            "down_proj",
-            "lm_head",
-        ],
-        feedforward_modules=["down_proj"]
-    )
+    if config["wandb_parameters"]["start_from_checkpoint"]:
+        config["chekpoint_folder"]= retrieve_checkpoint(config)
+        ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
+    else:
+        ia3_config = IA3Config(
+            task_type="CAUSAL_LM",
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+                "lm_head",
+            ],
+            feedforward_modules=["down_proj"]
+        )
 
     return bnb_config, ia3_config
 
@@ -48,12 +52,11 @@ def init_configs():
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
     if config["wandb_parameters"]["start_from_checkpoint"]:
-        folder = retrieve_checkpoint(config)
-        model = AutoModelForCausalLM.from_pretrained(folder,
+        model = AutoModelForCausalLM.from_pretrained(config["chekpoint_folder"] ,
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
                                                      , device_map={"":Accelerator().process_index})
-        tokenizer = AutoTokenizer.from_pretrained(folder, add_eos_token=True)
+        tokenizer = AutoTokenizer.from_pretrained(config["chekpoint_folder"] , add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,

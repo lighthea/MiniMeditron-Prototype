@@ -23,7 +23,7 @@ def main():
     init_wandb_project(config)
 
     # Initialize the accelerator and quantization configs
-    bnb_config, ia3_conf = init_configs()
+    bnb_config, ia3_conf = init_configs(config)
 
     # Set up model for training
     model, tokenizer, train_args = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
