@@ -79,7 +79,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         save_strategy="steps",  # Save the model checkpoint every logging step
         evaluation_strategy="steps",  # Evaluate the model every logging step
         do_eval=True,
-        report_to=["wandb"] if Accelerator().process_index == 0 else [],
+        report_to=["wandb"],
         run_name=config["wandb_parameters"]["run_name"],
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
@@ -113,11 +113,10 @@ def load_config(config_file: str) -> dict:
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
-    if Accelerator().process_index == 0:
-        wandb.login(key=config["wandb_parameters"]['wandb_key'])
-        if len(config["wandb_parameters"]["wandb_project"]) > 0:
-            os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-            os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+    wandb.login(key=config["wandb_parameters"]['wandb_key'])
+    if len(config["wandb_parameters"]["wandb_project"]) > 0:
+        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
