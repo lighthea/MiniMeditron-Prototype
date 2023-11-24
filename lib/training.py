@@ -29,8 +29,7 @@ def init_configs(config):
     # Initialize the IA3 config
     if config["wandb_parameters"]["start_from_checkpoint"]:
         config["chekpoint_folder"] = retrieve_checkpoint(config)
-        #ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
-
+        # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
     ia3_config = IA3Config(
         task_type="CAUSAL_LM",
@@ -54,23 +53,24 @@ def init_configs(config):
 def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesConfig, ia3_config: IA3Config):
     # Initialize the accelerator and quantization configs
     if config["wandb_parameters"]["start_from_checkpoint"]:
-        model = AutoModelForCausalLM.from_pretrained(config["chekpoint_folder"] ,
+        model = AutoModelForCausalLM.from_pretrained(config["chekpoint_folder"],
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
                                                      , device_map={"": Accelerator().process_index})
-        tokenizer = AutoTokenizer.from_pretrained(config["chekpoint_folder"] , add_eos_token=True)
+        tokenizer = AutoTokenizer.from_pretrained(config["chekpoint_folder"], add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
-                                                     , device_map={"":Accelerator().process_index})
+                                                     , device_map={"": Accelerator().process_index})
 
         # Initialize the tokenizer
         tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'], add_eos_token=True)
         tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"][
+        "gradient_checkpointing"])
     # model = get_peft_model(model, ia3_config)
     train_args = TrainingArguments(
         output_dir=config["model_folders"]['output_dir'],
@@ -119,6 +119,7 @@ def init_wandb_project(config: dict) -> None:
             os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
             os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
+
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
     if config["general_settings"]["task"] == "qa":
         return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
@@ -129,7 +130,6 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
-
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
