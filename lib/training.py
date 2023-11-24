@@ -57,7 +57,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         model = AutoModelForCausalLM.from_pretrained(config["chekpoint_folder"] ,
                                                      quantization_config=bnb_config,
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"]
-                                                     , device_map={"":Accelerator().process_index})
+                                                     , device_map={"": Accelerator().process_index})
         tokenizer = AutoTokenizer.from_pretrained(config["chekpoint_folder"] , add_eos_token=True)
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
@@ -79,7 +79,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         save_strategy="steps",  # Save the model checkpoint every logging step
         evaluation_strategy="steps",  # Evaluate the model every logging step
         do_eval=True,
-        report_to=["wandb"],
+        report_to=["wandb"] if Accelerator().process_index == 0 else [],
         run_name=config["wandb_parameters"]["run_name"],
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
