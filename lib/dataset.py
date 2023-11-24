@@ -131,10 +131,12 @@ def format_chat_for_preference_optimisation(example, dataset: Dataset, tokenizer
                             "content": wrong_label}]
     chat_template_right = [{"role": "assistant",
                             "content": example["labels"]}]
-    tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False, add_generation_prompt=False)
-    tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False, add_generation_prompt=False)
+    tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False,
+                                                           add_generation_prompt=False)
+    tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False,
+                                                           add_generation_prompt=False)
 
-    return {"rejected": tokenized_output_wrong, "chosen" : tokenized_output_right}
+    return {"rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
 
 
 def save_dataset(dataset: Dataset, config: dict):
@@ -153,6 +155,7 @@ def save_dataset(dataset: Dataset, config: dict):
     # Save the tokenized dataset
     dataset.save_to_disk(config["model_folders"]['tokenized_data_path'])
     return dataset
+
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
