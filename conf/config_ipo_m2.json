@@ -8,7 +8,8 @@
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "train_folder": "data/knowledge_database/generated_patients/structured_patients",
-        "base_folder": "data/structure/guidelines"
+        "base_folder": "data/structure/guidelines",
+        "wandb_folder": "data/exports/wandb"
     },
 
     "model_folders" : {
