@@ -167,8 +167,7 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
         max_prompt_length=max_seq_length,
         max_target_length=max_target_length,
         truncation_mode="keep_end",
-        generate_during_eval=False,
-
+        generate_during_eval=False
     )
 
     return trainer
