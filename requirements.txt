@@ -6,7 +6,7 @@ packaging
 ninja
 transformers @ git+https://github.com/huggingface/transformers.git@main
 peft
-trl[peft]@git+https://github.com/kashif/trl.git@ipo
+trl[peft]@https://github.com/huggingface/trl.git@main
 bitsandbytes
 rank_bm25
 evaluate
