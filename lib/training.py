@@ -4,13 +4,10 @@ import os
 import torch
 import wandb
 from accelerate import Accelerator
-from datasets import Dataset, DatasetDict
-from peft import IA3Config, prepare_model_for_kbit_training, get_peft_model
+from peft import IA3Config, prepare_model_for_kbit_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
-from lib.tf_idf import batch_bm25
-from lib.utils import retrieve_prompt
 from lib.wandb import retrieve_checkpoint
 
 
