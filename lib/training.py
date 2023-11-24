@@ -113,11 +113,11 @@ def load_config(config_file: str) -> dict:
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
-    wandb.login(key=config["wandb_parameters"]['wandb_key'])
-    if len(config["wandb_parameters"]["wandb_project"]) > 0:
-        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
-
+    if Accelerator().process_index == 0:
+        wandb.login(key=config["wandb_parameters"]['wandb_key'])
+        if len(config["wandb_parameters"]["wandb_project"]) > 0:
+            os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
+            os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
     if config["general_settings"]["task"] == "qa":
