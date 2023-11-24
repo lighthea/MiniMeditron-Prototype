@@ -72,7 +72,6 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
     # model = get_peft_model(model, ia3_config)
-
     train_args = TrainingArguments(
         output_dir=config["model_folders"]['output_dir'],
         warmup_steps=5,
