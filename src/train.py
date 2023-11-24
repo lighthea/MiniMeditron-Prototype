@@ -16,9 +16,6 @@ def main():
     conf_file = sys.argv[1]
     config = load_config(conf_file)
 
-    # Create all paths
-    create_all_path(config)
-
     # Initialize the wandb project
     init_wandb_project(config)
 
