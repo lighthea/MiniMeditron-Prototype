@@ -22,7 +22,7 @@
         "n_context_guidelines": 3,
         "with_token": false,
         "with_output": false,
-        "test_size": 0.01
+        "test_size": 0.1
 
     },
 
