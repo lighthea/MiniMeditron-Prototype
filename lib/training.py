@@ -126,6 +126,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
+    tokenizer.padding_side = "right"
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -141,6 +142,7 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
 
 
 def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
+    tokenizer.padding_side = "left"
     # Print dataset structure
     print(dataset["train"])
     # Determine max seq length
@@ -150,7 +152,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
     max_target_length = max(len(tokenizer.encode(example["chosen"])) for example in
                             tqdm(dataset["train"], desc="Estimating max target length"))
     print(f"Max target length: {max_target_length}")
-    tokenizer.padding_side = "left"
     trainer = DPOTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -173,6 +174,7 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
 def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
+    tokenizer.padding_side = "right"
     # Checks if the instruction template is the first token of the first prompt
     instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
@@ -186,7 +188,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     max_seq_length = max(len(tokenizer.encode(example["text"])) for example in tqdm(dataset["train"],
                                                                                     desc="Estimating max seq length"))
     print(f"Max seq length: {max_seq_length}")
-    tokenizer.padding_side = "right"
+
 
     trainer = SFTTrainer(
         model=model,
