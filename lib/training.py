@@ -41,7 +41,7 @@ def init_configs(config):
             "lm_head",
         ],
         feedforward_modules=["down_proj"],
-        init_ia3_weights=config["wandb_parameters"]["start_from_checkpoint"],
+        init_ia3_weights=not config["wandb_parameters"]["start_from_checkpoint"],
     )
 
     return bnb_config, ia3_config
