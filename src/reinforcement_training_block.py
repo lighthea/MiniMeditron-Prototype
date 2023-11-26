@@ -23,8 +23,8 @@ def main():
     config = secure_config(config)
 
     # Initialize the wandb project
+    print('INIT 1')
     init_wandb_project(config)
-    bnb_config, ia3_conf = init_configs(config)
 
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
@@ -33,7 +33,9 @@ def main():
         log_with="wandb"
     )
 
+    print('LOAD MODEL')
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
+    print('AUTO TOKENIZER')
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'right'
@@ -44,6 +46,7 @@ def main():
         print(response)
         return random()
 
+    print('LOAD DATASET')
     train_dataset: DatasetDict = load_dataset(config, tokenizer)
     train_dataset = train_dataset.rename_column("text", "query")
 
@@ -52,6 +55,7 @@ def main():
         return sample
 
     train_dataset = train_dataset.map(tokenize, batched=False)
+    print('PPO')
     ppo_trainer = PPOTrainer(
         model=model,
         config=ppo_config,
@@ -70,6 +74,7 @@ def main():
 
     tokenizer.padding_side = 'left'
 
+    print('TRAIN START')
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
