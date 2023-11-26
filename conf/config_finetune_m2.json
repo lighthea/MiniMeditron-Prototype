@@ -1,10 +1,9 @@
 {
     "general_settings" : {
-            "process_file": "data/structure/pipelines/pipeline_2.json",
-            "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-            "task": "qa",
-            "use_flash_attn": false
-
+        "process_file": "data/structure/pipelines/pipeline_2.json",
+        "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
+        "task": "qa",
+        "use_flash_attn": false
     },
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
@@ -24,7 +23,6 @@
         "with_token": true,
         "with_output": true,
         "test_size": 0.1
-
     },
 
     "model_parameters" : {
@@ -45,8 +43,8 @@
     "wandb_parameters" : {
         "start_from_checkpoint": true,
         "baseline_name" : "generalist-model",
-        "run_name": "model2-qa",
-        "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
+        "run_name": "model2-qa-finetune-metrics",
+        "wandb_key": "ENCRYPT{6Sh6oSVjU7cwKe4NtPPtGg==;P9N5xM5uztWgYVH934uqX/7m68wHPiBjquEL3E3OG2KL9XSJAUdjNA==;xq/UydGvgEz08eOe1Wg3NA==}",
         "wandb_project": "minimed-finetune-proto0",
         "wandb_folder": "data/exports/wandb"
     }
