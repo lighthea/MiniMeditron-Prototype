@@ -44,7 +44,7 @@ def main():
         print(response)
         return random()
 
-    train_dataset: DatasetDict = load_dataset(config, tokenizer, None, with_token=False, with_output=False)
+    train_dataset: DatasetDict = load_dataset(config, tokenizer)
     train_dataset = train_dataset.rename_column("text", "query")
 
     def tokenize(sample):
