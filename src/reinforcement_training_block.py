@@ -22,16 +22,16 @@ def main():
     config = load_config(conf_file)
     config = secure_config(config)
 
+    # Initialize the wandb project
+    init_wandb_project(config)
+    bnb_config, ia3_conf = init_configs(config)
+
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=1.41e-5,
         log_with="wandb"
     )
-
-    # Initialize the wandb project
-    init_wandb_project(config)
-    bnb_config, ia3_conf = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
