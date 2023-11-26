@@ -1,5 +1,7 @@
 import os
 import sys
+from random import random
+from secure_env import secure_config
 
 import torch
 from datasets import DatasetDict
@@ -17,6 +19,8 @@ def main():
     # Load configuration
     conf_file = sys.argv[1]
     config = load_config(conf_file)
+    config = secure_config(config)
+
     model_name = config["model_parameters"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
@@ -35,8 +39,10 @@ def main():
     tokenizer.padding_side = 'right'
 
     # Define the reward function as a random number between 0 and 1
-    def reward_model(x):
-        return torch.rand(10)
+    def compute_rewards(query, response):
+        print(query)
+        print(response)
+        return random()
 
     train_dataset: DatasetDict = load_dataset(config, tokenizer, None, with_token=False, with_output=False)
     train_dataset = train_dataset.rename_column("text", "query")
@@ -72,9 +78,7 @@ def main():
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
         # Compute reward score
-        texts = [q + r for q, r in zip(batch["query"], batch["response"])]
-        pipe_outputs = reward_model(texts)
-        rewards = [torch.tensor(output[1]["score"]) for output in pipe_outputs]
+        rewards = [compute_rewards(q, r) for q, r in zip(batch["query"], batch["response"])]
 
         # Run PPO step
         stats = ppo_trainer.step(query_tensors, [response_tensors], rewards)
