@@ -6,6 +6,7 @@
             "use_flash_attn": false
 
     },
+
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "train_folder": "data/knowledge_database/generated_patients/structured_patients",
@@ -24,7 +25,6 @@
         "with_token": true,
         "with_output": true,
         "test_size": 0.1
-
     },
 
     "model_parameters" : {

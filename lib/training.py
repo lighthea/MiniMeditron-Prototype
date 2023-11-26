@@ -41,7 +41,7 @@ def init_configs(config):
             "lm_head",
         ],
         feedforward_modules=["down_proj"],
-        init_ia3_weights=not config["wandb_parameters"]["start_from_checkpoint"],
+        init_ia3_weights=config["wandb_parameters"]["reinit_weights"],
     )
 
     return bnb_config, ia3_config
@@ -188,7 +188,6 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     max_seq_length = max(len(tokenizer.encode(example["text"])) for example in tqdm(dataset["train"],
                                                                                     desc="Estimating max seq length"))
     print(f"Max seq length: {max_seq_length}")
-
 
     trainer = SFTTrainer(
         model=model,

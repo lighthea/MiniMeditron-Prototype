@@ -27,6 +27,7 @@ def main():
 
     # Load the dataset
     dataset = load_dataset(config, tokenizer)
+
     # Initialize the trainer
     trainer = launch_training(model, tokenizer, train_args, dataset, ia3_conf, config)
 

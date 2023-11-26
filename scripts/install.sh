@@ -36,4 +36,7 @@ unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
 cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
 
 echo "Running the fine_tune.py file"
-exec accelerate launch --config_file conf/accelerate_config.yaml src/train.py "$1"
+# If arg 1 exists execute the fine_tune.py file with the argument
+if [ -n "$1" ]; then
+    exec accelerate launch --config_file conf/accelerate_config.yaml src/train.py "$1"
+fi
