@@ -31,8 +31,7 @@ def main():
 
     # Initialize the wandb project
     init_wandb_project(config)
-
-    bnb_config, ia3_conf = init_configs()
+    bnb_config, ia3_conf = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
