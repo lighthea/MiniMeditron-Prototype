@@ -5,3 +5,5 @@
 /data/knowledge_database/
 **/__pycache__/**
 wandb/
+_notes.md
+_notes2.md
