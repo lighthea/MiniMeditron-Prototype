@@ -37,10 +37,10 @@ def get_secure_value(value: str):
             key = scrypt(password, '', 32, N=SCRYPT_PARAM_N, r=SCRYPT_PARAM_R, p=1)
 
             cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-            plaintext = cipher.decrypt(ciphertext).decode('utf-8')
+            plaintext = cipher.decrypt(ciphertext)
             try:
                 cipher.verify(tag)
-                return plaintext
+                return plaintext.decode('utf-8')
             except ValueError:
                 print('Incorrect password')
     return value

@@ -22,7 +22,7 @@ def main():
     config = load_config(conf_file)
     config = secure_config(config)
 
-    model_name = config["model_parameters"]["base_model_id"]
+    model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=1.41e-5,
