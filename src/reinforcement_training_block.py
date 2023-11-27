@@ -42,6 +42,7 @@ def main():
 
     # Define the reward function as a random number between 0 and 1
     def reward_model(x):
+        print(x)
         return torch.rand(10)
 
     train_dataset: DatasetDict = load_dataset(config, tokenizer)
