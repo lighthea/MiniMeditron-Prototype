@@ -10,7 +10,7 @@ from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
 
-def init_lora_config(config):
+def init_lora_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()
     float_type = torch.bfloat16 if bf16_support else torch.float16
     print(f"Using {float_type} for training")

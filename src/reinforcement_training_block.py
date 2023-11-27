@@ -12,7 +12,7 @@ from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import load_config, init_wandb_project, init_lora_config
+from lib.training import load_config, init_wandb_project, init_lora_configs, init_configs
 from lib.dataset import load_dataset
 from tqdm import tqdm
 
@@ -38,11 +38,11 @@ def main():
 
     # Initialize the accelerator and quantization configs
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
-    lora_config = init_lora_config(config)
+    bnb_conf, ia3_conf = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         ppo_config.model_name,
-        peft_config=lora_config,
+        peft_config=ia3_conf,
         load_in_8bit=True,
         device_map={ "": Accelerator().process_index }
     )
