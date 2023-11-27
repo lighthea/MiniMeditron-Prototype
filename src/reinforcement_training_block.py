@@ -32,7 +32,8 @@ def main():
     init_wandb_project(config)
 
     # Initialize the accelerator and quantization configs
-    bnb_config, ia3_conf = init_configs(config)
+    # Not used in practice (I have no clue on how to make it work with PPO trainer)
+    # bnb_config, ia3_conf = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
