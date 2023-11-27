@@ -31,6 +31,7 @@ def main():
         optimize_cuda_cache=True,
         log_with="wandb",
         batch_size=config["model_parameters"]["per_device_train_batch_size"],
+        mini_batch_size=1,
         task_name=config["wandb_parameters"]["run_name"],
         tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
