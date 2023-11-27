@@ -12,7 +12,7 @@ from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import load_config, init_wandb_project, init_lora_configs, init_configs
+from lib.training import load_config, init_wandb_project, init_configs
 from lib.dataset import load_dataset
 from tqdm import tqdm
 
