@@ -72,19 +72,28 @@ def main():
     tokenizer.padding_side = 'left'
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
+        print(f">>> Epoch {epoch} <<<")
+        
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
         response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
+        print("[x] - Got tensors from trainer")
+        
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
+        print("[x] - Tokenized")
 
         # Compute reward score
         texts = [q + r for q, r in zip(batch["query"], batch["response"])]
         pipe_outputs = reward_model(texts)
+        print("[x] - Computed Reward")
+        
         rewards = [torch.tensor(output[1]["score"]) for output in pipe_outputs]
 
         # Run PPO step
         stats = ppo_trainer.step(query_tensors, [response_tensors], rewards)
+        print("[x] - Step done")
+        
         ppo_trainer.log_stats(stats, batch, rewards)
         print(stats)
 
