@@ -46,7 +46,7 @@
         "start_from_checkpoint": true,
         "baseline_name" : "generalist-model",
         "run_name": "model2-qa-contrastive",
-        "wandb_key": "'ENCRYPT{r7mfHokpVPge9wKJnIVRtQ==;NutfIIDjyMpweJ3cgI+YHVrvyyfu0Dqqyn/Ujpp0drVPJuHBzlpdlQ==;RucHJE+LLM5U/dLde7eAOA==}'",
+        "wandb_key": "ENCRYPT{r7mfHokpVPge9wKJnIVRtQ==;NutfIIDjyMpweJ3cgI+YHVrvyyfu0Dqqyn/Ujpp0drVPJuHBzlpdlQ==;RucHJE+LLM5U/dLde7eAOA==}",
         "wandb_project": "minimed-finetune-proto0",
         "wandb_folder": "data/exports/wandb"
     }
