@@ -138,7 +138,7 @@ def get_metric_used(dataset, conf):
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
     # Find what metric we are going to use
-    metric = get_metric_used(config["metric"])
+    metric = get_metric_used(dataset, config["metric"])
 
     match config["general_settings"]["task"]:
         case "qa":
