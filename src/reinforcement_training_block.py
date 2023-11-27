@@ -17,7 +17,7 @@ def main():
     # Load configuration
     conf_file = sys.argv[1]
     config = load_config(conf_file)
-    model_name = config["model_parameters"]["base_model_id"]
+    model_name = config["general_parameters"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=1.41e-5,
