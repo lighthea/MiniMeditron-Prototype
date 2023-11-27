@@ -42,7 +42,8 @@ def main():
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         ppo_config.model_name,
         peft_config=lora_config,
-        load_in_8bit=True
+        load_in_8bit=True,
+        device_map={ "": Accelerator().process_index }
     )
 
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name, add_eos_token=True)
