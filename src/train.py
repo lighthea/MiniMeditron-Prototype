@@ -1,5 +1,6 @@
 import os
 import sys
+from secure_env import secure_config
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
@@ -14,7 +15,7 @@ from lib.dataset import load_dataset
 def main():
     # Load configuration
     conf_file = sys.argv[1]
-    config = load_config(conf_file)
+    config = secure_config(conf_file)
 
     # Initialize the wandb project
     init_wandb_project(config)

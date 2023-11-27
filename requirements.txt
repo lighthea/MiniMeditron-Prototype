@@ -20,3 +20,4 @@ wandb
 accelerate
 dataclasses
 tqdm
+pycryptodome
