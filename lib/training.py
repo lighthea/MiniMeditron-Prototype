@@ -117,13 +117,18 @@ def init_wandb_project(config: dict) -> None:
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
-    if config["general_settings"]["task"] == "qa":
-        return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
-    elif config["general_settings"]["task"] == "finetune":
-        return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
-    elif config["general_settings"]["task"] == "po":
-        return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
+    match config["general_settings"]["task"]:
+        case "qa":
+            return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
+        
+        case "finetune":
+            return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
+    
+        case "po":
+            return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
 
+        case _:
+            return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
     tokenizer.padding_side = "right"
