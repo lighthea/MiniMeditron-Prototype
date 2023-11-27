@@ -34,11 +34,7 @@ def main():
     # Initialize the accelerator and quantization configs
     bnb_config, ia3_conf = init_configs(config)
 
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(
-        ppo_config.model_name,
-        peft_config=ia3_conf,
-        quantization_config=bnb_config
-    )
+    model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'right'
