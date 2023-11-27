@@ -7,7 +7,7 @@ from accelerate import Accelerator
 from peft import IA3Config, prepare_model_for_kbit_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer, PPOTrainer
 from lib.wandb import retrieve_checkpoint
 
 
@@ -123,6 +123,23 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
     elif config["general_settings"]["task"] == "po":
         return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
+    elif config["general_settings"]["task"] == "rl":
+        return launch_training_rl(model, tokenizer, train_args, dataset, ia3_conf)
+
+
+def launch_training_rl(model, tokenizer, train_args, dataset, ia3_conf):
+    trainer = PPOTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        args=train_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        peft_config=ia3_conf,
+        dataset_text_field="text",
+        dataset_batch_size=10,
+    )
+
+    return trainer
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
