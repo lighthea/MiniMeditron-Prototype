@@ -42,7 +42,7 @@
     },
 
     "loss": {
-        "type": "accuracy"
+        "type": "tfidf"
     },
 
     "wandb_parameters" : {
