@@ -16,7 +16,10 @@ from tqdm import tqdm
 def main():
     # Load configuration
     conf_file = sys.argv[1]
+    
     config = load_config(conf_file)
+    config = secure_config(config)
+
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
