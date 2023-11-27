@@ -26,9 +26,9 @@ def main():
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
-        learning_rate=1.41e-5,
+        learning_rate=config["model_parameters"]["learning_rate"],
         log_with="wandb",
-        batch_size=1,
+        batch_size=config["model_parameters"]["per_device_train_batch_size"],
         task_name=config["wandb_parameters"]["run_name"],
         tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
