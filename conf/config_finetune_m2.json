@@ -46,7 +46,7 @@
         "start_from_checkpoint": true,
         "baseline_name" : "generalist-model",
         "run_name": "model2-qa",
-        "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
+        "wandb_key": "27a738bc8c5d8ad7ce8429de93f4f4ddc637b567",
         "wandb_project": "minimed-finetune-proto0",
         "wandb_folder": "data/exports/wandb"
     }
