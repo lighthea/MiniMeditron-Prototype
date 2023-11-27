@@ -3,6 +3,8 @@ import sys
 from random import random
 from secure_env import secure_config
 
+from accelerate import Accelerator
+from peft import prepare_model_for_kbit_training
 from datasets import DatasetDict
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
@@ -25,7 +27,9 @@ def main():
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=1.41e-5,
-        log_with="wandb"
+        log_with="wandb",
+        task_name=config["wandb_parameters"]["run_name"],
+        tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
 
     # Initialize the wandb project
@@ -35,8 +39,14 @@ def main():
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
     bnb_config, ia3_conf = init_configs(config)
 
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
-    tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
+    model = AutoModelForCausalLMWithValueHead.from_pretrained(
+        ppo_config.model_name,
+        quantization_config=bnb_config,
+        use_flash_attention_2=config["general_settings"]["use_flash_attn"],
+    )
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
+
+    tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name, add_eos_token=True)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'right'
 
