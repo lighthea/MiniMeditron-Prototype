@@ -27,6 +27,8 @@ def main():
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=config["model_parameters"]["learning_rate"],
+        gradient_accumulation_steps=config["model_parameters"]["gradient_accumulation_steps"],
+        optimize_cuda_cache=True,
         log_with="wandb",
         batch_size=config["model_parameters"]["per_device_train_batch_size"],
         task_name=config["wandb_parameters"]["run_name"],
@@ -38,13 +40,13 @@ def main():
 
     # Initialize the accelerator and quantization configs
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
-    bnb_conf, ia3_conf = init_configs(config)
+    lora_config = init_lora_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         ppo_config.model_name,
-        peft_config=ia3_conf,
+        peft_config=lora_config,
         load_in_8bit=True,
-        device_map={ "": Accelerator().process_index }
+        device_map={ "": Accelerator().local_process_index }
     )
 
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name, add_eos_token=True)
@@ -77,7 +79,8 @@ def main():
         "top_k": 0.0,
         "top_p": 1.0,
         "do_sample": True,
-        "pad_token_id": tokenizer.eos_token_id,
+        "pad_token_id": tokenizer.pad_token_id,
+        "eos_token_id": tokenizer.eos_token_id,
         "max_new_tokens": 1024
     }
 

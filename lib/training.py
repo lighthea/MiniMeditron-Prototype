@@ -22,16 +22,16 @@ def init_lora_configs(config):
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
-        target_modules=[
-            "q_proj",
-            "k_proj",
-            "v_proj",
-            "o_proj",
-            "gate_proj",
-            "up_proj",
-            "down_proj",
-            "lm_head",
-        ],
+        # target_modules=[
+        #     "q_proj",
+        #     "k_proj",
+        #     "v_proj",
+        #     "o_proj",
+        #     "gate_proj",
+        #     "up_proj",
+        #     "down_proj",
+        #     "lm_head",
+        # ],
         init_lora_weights=not config["wandb_parameters"]["start_from_checkpoint"],
     )
 
