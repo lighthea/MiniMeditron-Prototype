@@ -41,7 +41,7 @@
         "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
     },
 
-    "metric": {
+    "loss": {
         "type": "accuracy"
     },
 

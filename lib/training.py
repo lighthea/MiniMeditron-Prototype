@@ -7,8 +7,51 @@ from accelerate import Accelerator
 from peft import IA3Config, LoraConfig, prepare_model_for_kbit_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers.modeling_utils import unwrap_model
+from transformers.utils import is_peft_available
+from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
+
+class TFIDF_Trainer(SFTTrainer):
+    def __init__(self, *args, **kwargs):
+        super(TFIDF_Trainer, self).__init__(*args, **kwargs)
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        # This code is totally mine and not a copy paste from https://github.com/huggingface/transformers/blob/ce315081340fdf6846f16c321eb53878b6272d53/src/transformers/trainer.py
+        # Get label and predication tokens
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+        outputs = model(**inputs)
+
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        if labels is not None:
+            unwrapped_model = unwrap_model(model)
+            if is_peft_available() and isinstance(unwrapped_model, PeftModel):
+                model_name = unwrapped_model.base_model.model._get_name()
+            else:
+                model_name = unwrapped_model._get_name()
+            if model_name in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
+                loss = self.label_smoother(outputs, labels, shift_labels=True)
+            else:
+                loss = self.label_smoother(outputs, labels)
+        else:
+            if isinstance(outputs, dict) and "loss" not in outputs:
+                raise ValueError(
+                    "The model did not return a loss from the inputs, only the following keys: "
+                    f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
+                )
+            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+
+        return (loss, outputs) if return_outputs else loss
 
 def init_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()
@@ -113,39 +156,13 @@ def init_wandb_project(config: dict) -> None:
         os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
-def build_tfidf_distance(dataset, conf):
-    # Print the dataset
-    print(dataset)
-    print(conf)
-    raise Exception("Not implemented")
-
-def get_metric_used(dataset, conf):
-    METRIC_DICT = {
-        'accuracy': None, # Default metric for hugging face
-        'tfidf': build_tfidf_distance
-    }
-
-    if conf["type"] not in METRIC_DICT:
-        raise Exception("No metric {} found in registry".format(conf["type"]))
-
-    setup_metric = METRIC_DICT[conf["type"]]
-    if setup_metric is None:
-        return None
-    
-    metric = setup_metric(dataset, conf)
-    return metric
-
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
-
-    # Find what metric we are going to use
-    metric = get_metric_used(dataset, config["metric"])
-
     match config["general_settings"]["task"]:
         case "qa":
             return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
         
         case "finetune":
-            return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, compute_metric=metric)
+            return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config)
     
         case "po":
             return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
@@ -153,9 +170,18 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         case _:
             return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
-def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, compute_metric=None):
+def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config):
+    loss_type = config["loss"]["type"]
+    match loss_type:
+        case "accuracy":
+            trainer_builder = SFTTrainer
+        case "tfidf":
+            trainer_builder = TFIDF_Trainer
+        case _:
+            raise Exception("unrecognized loss_type {}".format(loss_type))
+
     tokenizer.padding_side = "right"
-    trainer = SFTTrainer(
+    trainer = trainer_builder(
         model=model,
         tokenizer=tokenizer,
         args=train_args,
@@ -163,7 +189,6 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, co
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
-        compute_metric=compute_metric,
         dataset_batch_size=10,
     )
 
