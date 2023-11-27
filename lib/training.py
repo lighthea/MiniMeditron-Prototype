@@ -4,7 +4,7 @@ import os
 import torch
 import wandb
 from accelerate import Accelerator
-from peft import IA3Config, prepare_model_for_kbit_training
+from peft import IA3Config, LoraConfig, prepare_model_for_kbit_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
