@@ -8,6 +8,7 @@ from peft import LoraConfig
 from datasets import DatasetDict
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
+from trl.core import LengthSampler
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
@@ -68,10 +69,12 @@ def main():
         return sample
 
     train_dataset = train_dataset.map(tokenize, batched=False)
+    dataset = train_dataset["train"]
+
     ppo_trainer = PPOTrainer(
         model=model,
         config=ppo_config,
-        dataset=train_dataset["train"],
+        dataset=dataset,
         tokenizer=tokenizer,
     )
 
@@ -82,17 +85,21 @@ def main():
         "do_sample": True,
         "pad_token_id": tokenizer.pad_token_id,
         "eos_token_id": tokenizer.eos_token_id,
-        "max_new_tokens": 1024
+        "max_new_tokens": 512
     }
 
     tokenizer.padding_side = 'left'
 
+    output_min_length = 6
+    output_max_length = 512
+    output_length_sampler = LengthSampler(output_min_length, output_max_length)
+
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
-        print(batch)
+        print(len(batch["input_ids"]))
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
-        response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
+        response_tensors = ppo_trainer.generate(query_tensors, length_sampler=output_length_sampler, **generation_kwargs)
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
         # Compute reward score
