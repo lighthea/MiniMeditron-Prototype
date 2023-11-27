@@ -5,7 +5,6 @@ import torch
 from datasets import DatasetDict
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
-from dataset import load_dataset
 
 from secure_env import *
 
@@ -14,6 +13,7 @@ sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.training import load_config, init_wandb_project, init_configs
 from tqdm import tqdm
+from lib.dataset import load_dataset
 
 
 def main():
