@@ -10,6 +10,33 @@ from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
 
+def init_lora_config(config):
+    bf16_support = torch.cuda.is_bf16_supported()
+    float_type = torch.bfloat16 if bf16_support else torch.float16
+    print(f"Using {float_type} for training")
+    print("Initializing LoraConfig")
+
+    lora_config = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head",
+        ],
+        feedforward_modules=["down_proj"],
+        init_lora_weights=not config["wandb_parameters"]["start_from_checkpoint"],
+    )
+
+    return lora_config
 
 def init_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()

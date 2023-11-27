@@ -4,7 +4,7 @@ from random import random
 from secure_env import secure_config
 
 from accelerate import Accelerator
-from peft import prepare_model_for_kbit_training
+from peft import LoraConfig
 from datasets import DatasetDict
 from transformers import AutoTokenizer
 from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
@@ -12,7 +12,7 @@ from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import load_config, init_wandb_project, init_configs
+from lib.training import load_config, init_wandb_project, init_lora_config
 from lib.dataset import load_dataset
 from tqdm import tqdm
 
@@ -37,14 +37,13 @@ def main():
 
     # Initialize the accelerator and quantization configs
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
-    bnb_config, ia3_conf = init_configs(config)
+    lora_config = init_lora_config(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         ppo_config.model_name,
-        quantization_config=bnb_config,
-        use_flash_attention_2=config["general_settings"]["use_flash_attn"],
+        peft_config=lora_config,
+        load_in_8bit=True
     )
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
 
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name, add_eos_token=True)
     tokenizer.pad_token = tokenizer.eos_token
@@ -86,12 +85,9 @@ def main():
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
-        print('GEN')
         response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
-        print(len(response_tensors))
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
-        print('REWARD')
         # Compute reward score
         rewards = [compute_rewards(q, r) for q, r in zip(batch["query"], batch["response"])]
 
