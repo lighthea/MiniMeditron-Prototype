@@ -128,7 +128,7 @@ def get_metric_used(dataset, conf):
     if conf["type"] not in METRIC_DICT:
         raise Exception("No metric {} found in registry".format(conf["type"]))
 
-    setup_metric = conf["type"]
+    setup_metric = METRIC_DICT[conf["type"]]
     if setup_metric is None:
         return None
     
