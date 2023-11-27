@@ -65,7 +65,7 @@ def main():
     train_dataset = train_dataset.rename_column("text", "query")
 
     def tokenize(sample):
-        sample["input_ids"] = tokenizer.encode(sample["query"], padding="max_length", max_length=4096)
+        sample["input_ids"] = tokenizer.encode(sample["query"], padding="max_length", max_length=512)
         return sample
 
     train_dataset = train_dataset.map(tokenize, batched=False)
@@ -95,7 +95,6 @@ def main():
     output_length_sampler = LengthSampler(output_min_length, output_max_length)
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
-        print(len(batch["input_ids"]))
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
