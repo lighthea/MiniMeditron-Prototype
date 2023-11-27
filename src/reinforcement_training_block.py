@@ -41,11 +41,11 @@ def main():
 
     # Initialize the accelerator and quantization configs
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
-    lora_config = init_lora_configs(config)
+    bnb_config, ia3_config = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         ppo_config.model_name,
-        peft_config=lora_config,
+        peft_config=ia3_config,
         load_in_8bit=True,
         device_map={ "": Accelerator().local_process_index }
     )
@@ -88,6 +88,7 @@ def main():
     tokenizer.padding_side = 'left'
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
+        print(batch)
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
