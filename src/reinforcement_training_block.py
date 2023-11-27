@@ -23,7 +23,6 @@ def main():
     config = load_config(conf_file)
     config = secure_config(config)
     
-    print(config)
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
         model_name=model_name,
