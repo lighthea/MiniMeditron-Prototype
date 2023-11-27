@@ -33,7 +33,7 @@ def main():
 
     # Initialize the accelerator and quantization configs
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
-    # bnb_config, ia3_conf = init_configs(config)
+    bnb_config, ia3_conf = init_configs(config)
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name)
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
@@ -76,9 +76,12 @@ def main():
         query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
+        print('GEN')
         response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
+        print(len(response_tensors))
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
+        print('REWARD')
         # Compute reward score
         rewards = [compute_rewards(q, r) for q, r in zip(batch["query"], batch["response"])]
 
