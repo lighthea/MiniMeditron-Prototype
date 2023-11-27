@@ -105,7 +105,6 @@ def load_config(config_file: str) -> dict:
     create_all_path(config)
     return config
 
-
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
@@ -114,14 +113,39 @@ def init_wandb_project(config: dict) -> None:
         os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
+def build_tfidf_distance(dataset, conf):
+    # Print the dataset
+    print(dataset)
+    print(conf)
+    raise Exception("Not implemented")
+
+def get_metric_used(dataset, conf):
+    METRIC_DICT = {
+        'accuracy': None, # Default metric for hugging face
+        'tfidf': build_tfidf_distance
+    }
+
+    if conf["type"] not in METRIC_DICT:
+        raise Exception("No metric {} found in registry".format(conf["type"]))
+
+    setup_metric = conf["type"]
+    if setup_metric is None:
+        return None
+    
+    metric = setup_metric(dataset, conf)
+    return metric
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
+
+    # Find what metric we are going to use
+    metric = get_metric_used(config["metric"])
+
     match config["general_settings"]["task"]:
         case "qa":
             return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
         
         case "finetune":
-            return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
+            return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, compute_metric=metric)
     
         case "po":
             return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
@@ -129,7 +153,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         case _:
             return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
-def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, compute_metric=None):
     tokenizer.padding_side = "right"
     trainer = SFTTrainer(
         model=model,
@@ -139,6 +163,7 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
         eval_dataset=dataset["test"],
         peft_config=ia3_conf,
         dataset_text_field="text",
+        compute_metric=compute_metric,
         dataset_batch_size=10,
     )
 

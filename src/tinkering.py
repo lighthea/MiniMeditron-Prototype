@@ -61,7 +61,10 @@ def kullback_leibler_divergence(P, Q):
 # Clustering of condition based on the tf_idfs matrix
 # Currently assume equal distribution of each disease(s)
 def distance(c1, c2):
-    M = 0.5 * c1 + 0.5 * c2 # Mixture distribution
+    p1 = 0.01
+    p2 = 0.01
+
+    M = p1 / (p1 + p2) * c1 + p2 / (p1 + p2) * c2 # Mixture distribution
     return 1/2 * kullback_leibler_divergence(c1, M) + 1/2 * kullback_leibler_divergence(c2, M)
 
 # Build the distance matrix (may take a while)

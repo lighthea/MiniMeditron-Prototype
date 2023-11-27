@@ -5,6 +5,7 @@
         "task": "qa",
         "use_flash_attn": false
     },
+
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "train_folder": "data/knowledge_database/generated_patients/structured_patients",
@@ -38,6 +39,10 @@
         "gradient_checkpointing": true,
         "gradient_accumulation_steps": 2,
         "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
+    },
+
+    "metric": {
+        "type": "accuracy"
     },
 
     "wandb_parameters" : {
