@@ -28,6 +28,7 @@ def main():
         model_name=model_name,
         learning_rate=1.41e-5,
         log_with="wandb",
+        batch_size=1,
         task_name=config["wandb_parameters"]["run_name"],
         tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
