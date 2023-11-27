@@ -32,7 +32,6 @@ def init_lora_config(config):
             "down_proj",
             "lm_head",
         ],
-        feedforward_modules=["down_proj"],
         init_lora_weights=not config["wandb_parameters"]["start_from_checkpoint"],
     )
 
