@@ -15,7 +15,9 @@ from lib.dataset import load_dataset
 def main():
     # Load configuration
     conf_file = sys.argv[1]
-    config = secure_config(conf_file)
+
+    config = load_config(conf_file)
+    config = secure_config(config)
 
     # Initialize the wandb project
     init_wandb_project(config)
