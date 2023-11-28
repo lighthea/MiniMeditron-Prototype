@@ -1,10 +1,15 @@
 .idea/
 /data/processed/
 /data/raw/
+/data/export/
 /Guidelines
 /data/knowledge_database/
 **/__pycache__/**
+**/__pycache__
 wandb/
 _notes.md
 _notes2.md
 password
+start.sh
+apply_remote_batch.sh
+diff.patch

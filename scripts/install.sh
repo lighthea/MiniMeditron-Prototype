@@ -13,8 +13,6 @@ fi
 echo "Installing the requirements"
 pip3 install --pre torch torchvision torchaudio -f https://download.pytorch.org/whl/nightly/cu113/torch_nightly.html
 pip install -r requirements.txt
-pip uninstall pycrypto
-pip install pycryptodome
 
 echo "Installing unzip if not installed"
 if ! [ -x "$(command -v unzip)" ]; then
