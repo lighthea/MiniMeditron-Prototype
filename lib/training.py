@@ -110,10 +110,11 @@ def load_config(config_file: str) -> dict:
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
-    wandb.login(key=config["wandb_parameters"]['wandb_key'], anonymous='never', relogin=True)
-    if len(config["wandb_parameters"]["wandb_project"]) > 0:
-        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+    wandb.init()
+    wandb.login(key=config["wandb_parameters"]['wandb_key'])
+    # if len(config["wandb_parameters"]["wandb_project"]) > 0:
+    os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
+    os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
@@ -123,8 +124,8 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf)
     elif config["general_settings"]["task"] == "po":
         return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
-    elif config["general_settings"]["task"] == "rl":
-        return launch_training_rl(model, tokenizer, train_args, dataset, ia3_conf)
+    # elif config["general_settings"]["task"] == "rl":
+    #     return launch_training_rl(model, tokenizer, train_args, dataset, ia3_conf)
 
 
 def launch_training_rl(model, tokenizer, train_args, dataset, ia3_conf):
