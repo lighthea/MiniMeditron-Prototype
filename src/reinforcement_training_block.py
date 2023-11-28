@@ -75,7 +75,7 @@ def main():
         print(f">>> Epoch {epoch} <<<", end='\n')
         
         query_tensors = batch["input_ids"]
-        print(query_tensors.shape)
+        print(len(query_tensors))
 
         # Get response from SFTModel
         response_tensors = ppo_trainer.generate(query_tensors, **generation_kwargs)
