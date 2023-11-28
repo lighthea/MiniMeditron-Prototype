@@ -1,7 +1,7 @@
 .idea/
 /data/processed/
 /data/raw/
-/data/export/
+/data/exports/
 /Guidelines
 /data/knowledge_database/
 **/__pycache__/**
