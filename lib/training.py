@@ -60,7 +60,6 @@ def init_configs(config):
     print("Initializing accelerator and quantization configs")
 
     # Initialize the quantization config
-
     bnb_config = BitsAndBytesConfig(
         load_in_8bit=True,
     )
