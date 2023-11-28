@@ -36,15 +36,15 @@ unzip data/structured_guidelines.zip -d data/knowledge_database/guidelines
 cd ~/MiniMeditron-Prototype || (echo "Error : Could not change directory to repository directory">&2 && exit)
 
 # Setup authorized key (notice requires no identation)
-if [ $1 == "--setupssh" ]
-then
-	echo "Install ssh server"
-	sudo apt-get update
-	sudo apt install -y openssh-server
-	mkdir ~/.ssh
-	echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKYXT7oh0BSEOy1n5Yrn6qxVvA2dLp2WE8p3bhA0PL8H guillaume.boye@epfl.ch" >> ~/.ssh/authorized_keys
-	service ssh start
-fi
+# if [ $1 == "--setupssh" ]
+# then
+echo "Install ssh server"
+sudo apt-get update
+sudo apt install -y openssh-server
+mkdir ~/.ssh
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKYXT7oh0BSEOy1n5Yrn6qxVvA2dLp2WE8p3bhA0PL8H guillaume.boye@epfl.ch" >> ~/.ssh/authorized_keys
+service ssh start
+# fi
 
 echo "Running the fine_tune.py file"
 exec accelerate launch --config_file conf/accelerate_config.yaml src/train.py "$1"
