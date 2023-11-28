@@ -11,7 +11,8 @@ from secure_env import *
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(current_dir, '..'))
 
-from lib.training import load_config, init_wandb_project, init_configs
+from lib.training import load_config, init_configs
+from lib.wandb import init_wandb_project
 from tqdm import tqdm
 from lib.dataset import load_dataset
 
