@@ -24,10 +24,10 @@ def init_configs(config):
     )
 
     # Initialize the IA3 config
-    if config["wandb_parameters"]["start_from_checkpoint"]:
-        print("Starting from checkpoint")
-        config["chekpoint_folder"] = retrieve_checkpoint(config)
-        # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
+    # if config["wandb_parameters"]["start_from_checkpoint"]:
+    #     print("Starting from checkpoint")
+    #     config["chekpoint_folder"] = retrieve_checkpoint(config)
+    #     # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
     ia3_config = IA3Config(
         task_type="CAUSAL_LM",
