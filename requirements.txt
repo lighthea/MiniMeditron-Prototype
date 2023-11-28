@@ -21,4 +21,4 @@ accelerate
 dataclasses
 tqdm
 pycryptodome
-sklearn
+scikit-learn
