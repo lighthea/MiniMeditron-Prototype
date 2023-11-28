@@ -4,8 +4,6 @@
 /data/exports/
 /Guidelines
 /data/knowledge_database/
-**/__pycache__/**
-**/__pycache__
 wandb/
 _notes.md
 _notes2.md
