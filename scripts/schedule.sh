@@ -3,7 +3,7 @@ IMG_PROJECT=mlo-sallinen-meditron
 IMG_NAME=prot0
 
 runai submit \
-		--name "sandbox" \
+		--name "unique-sandbox-name-version-2" \
 		--interactive \
 		--gpu 1 \
 		--image $REGISTRY/$IMG_PROJECT/$IMG_NAME:latest \
