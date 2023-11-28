@@ -5,7 +5,7 @@ import random
 from datasets import Dataset, DatasetDict
 from tqdm import tqdm
 
-from lib.tf_idf import batch_bm25
+from lib.tf_idf import batch_bm25, build_tfidf
 from lib.utils import retrieve_prompt
 
 
@@ -199,3 +199,27 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     dataset = save_dataset(dataset, config)
 
     return dataset
+
+def load_extras(config: dict):
+    # Open each guidelines parse the json object
+    base_path = config["general_folders"]["guidelines_folder"]
+    guidelines = []
+
+    for file in os.listdir(base_path):
+        path = os.path.join(base_path, file)
+        if file.endswith('.jsonl'):
+            with open(path, 'r') as f:
+                guidelines += [json.loads(x) for x in f.readlines()]
+
+    # Filter incorrect guideline
+    guidelines = [guideline for guideline in guidelines if "text" in guidelines]
+
+    # Build the tfidf matrix
+    tfidf = build_tfidf(guidelines)
+    print(tfidf.shape)
+
+    # Return all extra's
+    return {
+        'guideline': guidelines,
+        'tfidf': tfidf
+    }

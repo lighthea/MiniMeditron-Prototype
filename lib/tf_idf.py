@@ -6,6 +6,8 @@ import sys
 from datasets import Dataset
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
+from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
+from sklearn.decomposition import PCA
 
 from lib.utils import yield_structured_obj, repair_json
 
@@ -64,3 +66,38 @@ def batch_bm25(dataset: Dataset, guideline_folder: str, base_folder: str, n: int
 
     print(f"Filtered {(len(dataset) - len(filtered_dataset) / len(dataset)) * 100}% of the dataset")
     return filtered_dataset
+
+
+def build_tfidf(guidelines: list[str]):
+    # Preprocess all documents (prior to building the vocabulary)
+    corpus = []
+
+    print(' - Proprocess and extract the corpus')
+    for guideline in tqdm(guidelines):
+        text = guideline["text"]
+
+        # Replacing unconventional punctuation with spaces
+        text = re.sub(r'[\(\)\[\]\,\-\;\.\!\?”“\"\']', ' ', text)
+        text = re.sub(r'[\*+\_\#]+', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+
+        # Stemming is done by sklearn
+        corpus.append(text)
+    
+    # Build the vocabulary matrix
+    print(' - Vectorize the corpus')
+    vectorizer = CountVectorizer(min_df=10, max_df=0.7) # Must be less that 80%
+    counts = vectorizer.fit_transform(corpus).toarray()
+
+    # Learn the IDF matrix
+    print(' - Learn the IDF for each terms')
+    transformer = TfidfTransformer(smooth_idf=True)
+    transformer.fit(counts)
+
+    # Build the TF-IDF matrix for each sample of the corpus
+    print(' - Build the TF-IDF dense matrix')
+    tfidf = transformer.transform(counts + 1).toarray() # Smoothing of the count
+
+    # Running PCA on tf-idf matrix to select the important words
+    # Nope
+    return tfidf

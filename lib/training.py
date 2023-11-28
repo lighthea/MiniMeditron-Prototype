@@ -11,6 +11,7 @@ from transformers.modeling_utils import unwrap_model
 from transformers.utils import is_peft_available
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from .secure_env import read_secure_file
+from .dataset import load_extras
 
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
@@ -20,7 +21,13 @@ class TfIdfTrainer(SFTTrainer):
         super(TfIdfTrainer, self).__init__(*args, **kwargs)
 
     def initialize_metric(self, dataset, config, tokenizer):
-        print(dataset)
+        # Load guidelines
+        extras = load_extras(config)
+
+        # Build tf-idf matrix
+        
+
+        print(extras)
         raise NotImplementedError()
 
     def compute_loss(self, model, inputs, return_outputs=False):
