@@ -49,7 +49,7 @@
         "start_from_checkpoint": true,
         "baseline_name" : "generalist-model",
         "run_name": "model2-qa-finetune-metrics",
-        "wandb_key": "ENCRYPT{6Sh6oSVjU7cwKe4NtPPtGg==;P9N5xM5uztWgYVH934uqX/7m68wHPiBjquEL3E3OG2KL9XSJAUdjNA==;xq/UydGvgEz08eOe1Wg3NA==}",
+        "wandb_key": "ENCRYPTED{zjjRnC5U+RL2tKi4kTdRvQ==;taEY67h8tVqQAKLdYTlIX7jJIF2DwWa21pB8M6R59lP7um7dDyHhUw==;OloZJTpIFF9in2gkW6hBkQ==}",
         "wandb_project": "minimed-finetune-proto0",
         "wandb_folder": "data/exports/wandb"
     }

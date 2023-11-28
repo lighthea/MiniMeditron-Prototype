@@ -10,13 +10,18 @@ from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
 from transformers.modeling_utils import unwrap_model
 from transformers.utils import is_peft_available
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+from .secure_env import read_secure_file
 
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
 
-class TFIDF_Trainer(SFTTrainer):
+class TfIdfTrainer(SFTTrainer):
     def __init__(self, *args, **kwargs):
-        super(TFIDF_Trainer, self).__init__(*args, **kwargs)
+        super(TfIdfTrainer, self).__init__(*args, **kwargs)
+
+    def initialize_metric(self, dataset, config, tokenizer):
+        print(dataset)
+        raise NotImplementedError()
 
     def compute_loss(self, model, inputs, return_outputs=False):
         # This code is totally mine and not a copy paste from https://github.com/huggingface/transformers/blob/ce315081340fdf6846f16c321eb53878b6272d53/src/transformers/trainer.py
@@ -52,6 +57,11 @@ class TFIDF_Trainer(SFTTrainer):
             loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
 
         return (loss, outputs) if return_outputs else loss
+
+METRIC_LOSS_DICT = {
+    "accuracy": SFTTrainer,
+    "tfidf": TfIdfTrainer
+}
 
 def init_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()
@@ -141,8 +151,8 @@ def create_all_path(config: dict):
 
 
 def load_config(config_file: str) -> dict:
-    with open(config_file) as config_file:
-        config = json.load(config_file)
+    content = read_secure_file(config_file)
+    config = json.loads(content)
 
     create_all_path(config)
     return config
@@ -158,29 +168,20 @@ def init_wandb_project(config: dict) -> None:
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
     match config["general_settings"]["task"]:
         case "qa":
-            return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf)
+            return launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf, config)
         
         case "finetune":
             return launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config)
     
         case "po":
-            return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf)
+            return launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config)
 
         case _:
             return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config):
-    loss_type = config["loss"]["type"]
-    match loss_type:
-        case "accuracy":
-            trainer_builder = SFTTrainer
-        case "tfidf":
-            trainer_builder = TFIDF_Trainer
-        case _:
-            raise Exception("unrecognized loss_type {}".format(loss_type))
-
     tokenizer.padding_side = "right"
-    trainer = trainer_builder(
+    trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
         args=train_args,
@@ -193,8 +194,7 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, co
 
     return trainer
 
-
-def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config):
     tokenizer.padding_side = "left"
     # Print dataset structure
     print(dataset["train"])
@@ -223,11 +223,17 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
 
     return trainer
 
-
-def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf, config):
+    # List of metrics
+    loss_type = config["loss"]["type"]
+    if not loss_type in METRIC_LOSS_DICT:
+        raise Exception("unrecognized loss type {}".format(loss_type))
+    trainer_builder = METRIC_LOSS_DICT[loss_type]
+    
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
     tokenizer.padding_side = "right"
+
     # Checks if the instruction template is the first token of the first prompt
     instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
@@ -242,8 +248,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
                                                                                     desc="Estimating max seq length"))
     print(f"Max seq length: {max_seq_length}")
 
-
-    trainer = SFTTrainer(
+    trainer = trainer_builder(
         model=model,
         tokenizer=tokenizer,
         args=train_args,
@@ -255,5 +260,8 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
         max_seq_length=max_seq_length + 1,
         dataset_batch_size=10,
     )
+
+    if hasattr(trainer, 'initialize_metric'):
+        trainer.initialize_metric(dataset, config, tokenizer)
 
     return trainer
