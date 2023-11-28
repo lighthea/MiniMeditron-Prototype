@@ -40,7 +40,8 @@ read -r -d '' AUTHORIZED_KEYS <<- EOM
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKYXT7oh0BSEOy1n5Yrn6qxVvA2dLp2WE8p3bhA0PL8H guillaume.boye@epfl.ch
 EOM
 
-if [ $1 == "--setupssh" ] then
+if [ $1 == "--setupssh" ]
+then
 	echo "Install ssh server"
 	sudo apt-get update
 	sudo apt install -y openssh-server
