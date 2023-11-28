@@ -25,6 +25,7 @@ def init_configs(config):
 
     # Initialize the IA3 config
     if config["wandb_parameters"]["start_from_checkpoint"]:
+        print("Starting from checkpoint")
         config["chekpoint_folder"] = retrieve_checkpoint(config)
         # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
@@ -110,11 +111,10 @@ def load_config(config_file: str) -> dict:
 def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
-    wandb.init()
     wandb.login(key=config["wandb_parameters"]['wandb_key'])
-    # if len(config["wandb_parameters"]["wandb_project"]) > 0:
-    os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-    os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+    if len(config["wandb_parameters"]["wandb_project"]) > 0:
+        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 
 def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
