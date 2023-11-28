@@ -212,14 +212,13 @@ def load_extras(config: dict):
                 guidelines += [json.loads(x) for x in f.readlines()]
 
     # Filter incorrect guideline
-    guidelines = [guideline for guideline in guidelines if "text" in guidelines]
+    guidelines = [guideline for guideline in guidelines if 
+        "structure" in guidelines and "label" in guidelines]
 
-    # Build the tfidf matrix
-    tfidf = build_tfidf(guidelines)
-    print(tfidf.shape)
+    # Convert structure into strings
+    
 
     # Return all extra's
     return {
         'guideline': guidelines,
-        'tfidf': tfidf
     }

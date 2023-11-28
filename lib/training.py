@@ -12,6 +12,7 @@ from transformers.utils import is_peft_available
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from .secure_env import read_secure_file
 from .dataset import load_extras
+from .tf_idf import build_tfidf
 
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
@@ -25,9 +26,12 @@ class TfIdfTrainer(SFTTrainer):
         extras = load_extras(config)
 
         # Build tf-idf matrix
-        
+        print('Build the tf-idf matrix for guidelines')
+        self.tfidf = build_tfidf(extras['guideline'])
 
-        print(extras)
+        # Build the label matrix
+        print('Build the label vector (for indexing)')
+        self.labels = [g['label'] for g in extras['guideline']]
         raise NotImplementedError()
 
     def compute_loss(self, model, inputs, return_outputs=False):
@@ -38,6 +42,9 @@ class TfIdfTrainer(SFTTrainer):
         else:
             labels = None
         outputs = model(**inputs)
+
+        print(outputs)
+        print(labels)
 
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
