@@ -1,0 +1,15 @@
+diff --git a/.gitignore b/.gitignore
+index ffccf14..54001a7 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -5,4 +5,4 @@
+ /data/knowledge_database/
+ **/__pycache__/**
+ wandb/
+-notes.md
+\ No newline at end of file
++notes.md
+diff --git a/__pycache__/bastifonctions.cpython-311.pyc b/__pycache__/bastifonctions.cpython-311.pyc
+deleted file mode 100644
+index 4fcd921..0000000
+Binary files a/__pycache__/bastifonctions.cpython-311.pyc and /dev/null differ
