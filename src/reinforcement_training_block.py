@@ -33,13 +33,12 @@ def main():
     ppo_config = PPOConfig(
         model_name=model_name,
         learning_rate=config["model_parameters"]["learning_rate"],
-        # gradient_accumulation_steps=config["model_parameters"]["gradient_accumulation_steps"],
-        # optimize_cuda_cache=True,
+        gradient_accumulation_steps=config["model_parameters"]["gradient_accumulation_steps"],
+        optimize_device_cache=True,
         # log_with="wandb",
         batch_size=config["model_parameters"]["per_device_train_batch_size"],
-        # mini_batch_size=1,
-        # task_name=config["wandb_parameters"]["run_name"],
-        # tracker_project_name=config["wandb_parameters"]["wandb_project"],
+        task_name=config["wandb_parameters"]["run_name"],
+        tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
 
     # Initialize the wandb project
@@ -56,6 +55,7 @@ def main():
     # And then we pass the loaded model to `AutoModelForCausalLMWithValueHead`
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         model,
+        perf_config=ia3_config,
         device_map={ "": Accelerator().local_process_index }
     )
 
@@ -95,21 +95,18 @@ def main():
         tokenizer=tokenizer,
     )
 
+    max_new_tokens = 128
+
     generation_kwargs = {
         "min_length": -1,
         "top_k": 0.0,
         "top_p": 1.0,
         "do_sample": True,
         "pad_token_id": tokenizer.eos_token_id,
-        # "eos_token_id": tokenizer.eos_token_id,
-        # "max_new_tokens": 512
+        "max_new_tokens": max_new_tokens
     }
 
-    # tokenizer.padding_side = 'left'
-
-    # output_min_length = 
-    # output_max_length = 512
-    output_length_sampler = LengthSampler(4, 128)
+    tokenizer.padding_side = 'left'
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
@@ -117,13 +114,9 @@ def main():
         # Get response from SFTModel
         response_tensors = []
         for query in query_tensors:
-            gen_len = output_length_sampler()
-            generation_kwargs["max_new_tokens"] = gen_len
             response = ppo_trainer.generate(query, **generation_kwargs)
-            response_tensors.append(response.squeeze()[-gen_len:])
+            response_tensors.append(response.squeeze()[-max_new_tokens:])
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
-
-        print('>>> egouyv <<<')
 
         # Compute reward score
         texts = [q + r for q, r in zip(batch["query"], batch["response"])]
@@ -133,7 +126,7 @@ def main():
         # Run PPO step
         stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
         ppo_trainer.log_stats(stats, batch, rewards)
-        print(stats)
+        # print(stats)
 
 if __name__ == "__main__":
     main()
