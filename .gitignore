@@ -13,3 +13,4 @@ password
 start.sh
 apply_remote_batch.sh
 diff.patch
+*.vscode
