@@ -35,7 +35,7 @@ def main():
         learning_rate=config["model_parameters"]["learning_rate"],
         gradient_accumulation_steps=config["model_parameters"]["gradient_accumulation_steps"],
         optimize_device_cache=True,
-        # log_with="wandb",
+        log_with="wandb",
         batch_size=config["model_parameters"]["per_device_train_batch_size"],
         task_name=config["wandb_parameters"]["run_name"],
         tracker_project_name=config["wandb_parameters"]["wandb_project"],
@@ -50,12 +50,12 @@ def main():
 
     # Now let's build the model, the reference model, and the tokenizer. We first
     # load the model in bfloat16 to save memory using `transformers`
-    model = AutoModelForCausalLM.from_pretrained(ppo_config.model_name, torch_dtype=torch.bfloat16)
+    # model = AutoModelForCausalLM.from_pretrained(ppo_config.model_name, torch_dtype=torch.bfloat16)
 
     # And then we pass the loaded model to `AutoModelForCausalLMWithValueHead`
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
-        model,
-        perf_config=ia3_config,
+        ppo_config.model_name,
+        peft_config=ia3_config,
         device_map={ "": Accelerator().local_process_index }
     )
 
@@ -106,7 +106,7 @@ def main():
         "max_new_tokens": max_new_tokens
     }
 
-    tokenizer.padding_side = 'left'
+    # tokenizer.padding_side = 'left'
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
