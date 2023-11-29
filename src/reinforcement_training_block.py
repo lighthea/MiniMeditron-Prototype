@@ -67,23 +67,29 @@ def main():
     def compute_rewards(texts):
         return torch.rand(len(texts))
 
-    train_dataset: DatasetDict = load_dataset(config, tokenizer)
-    train_dataset = train_dataset.rename_column("text", "query")
+    dataset: DatasetDict = load_dataset(config, tokenizer)
+    # dataset = dataset.rename_column("text", "query")
+
+    input_size = LengthSampler(2, 512)
 
     def tokenize(sample):
-        sample["input_ids"] = tokenizer.encode(sample["query"], padding="max_length", max_length=512)
+        prompt = sample["text"]
+
+        sample["input_ids"] = tokenizer.encode(prompt)[: input_size()]
+        sample["query"] = tokenizer.decode(sample["input_ids"])
         return sample
 
-    train_dataset = train_dataset.map(tokenize, batched=False)
-    dataset = train_dataset["train"]
+    dataset = dataset.map(tokenize, batched=False)
+    dataset.remove_columns("text")
+    dataset.set_format('torch')
 
     # We make sure to use the `Adam` optimizer on the model parameters that requires gradients
     optimizer = Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)
 
     ppo_trainer = PPOTrainer(
-        model=model,
         config=ppo_config,
-        dataset=dataset,
+        model=model,
+        dataset=dataset["train"],
         data_collator=collator,
         optimizer=optimizer,
         tokenizer=tokenizer,
@@ -99,11 +105,11 @@ def main():
         # "max_new_tokens": 512
     }
 
-    tokenizer.padding_side = 'left'
+    # tokenizer.padding_side = 'left'
 
     # output_min_length = 
     # output_max_length = 512
-    output_length_sampler = LengthSampler(2, 512)
+    output_length_sampler = LengthSampler(4, 128)
 
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
@@ -125,7 +131,7 @@ def main():
         rewards = [torch.tensor(output) for output in pipe_outputs]
 
         # Run PPO step
-        stats = ppo_trainer.step(query_tensors, [response_tensors], rewards)
+        stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
         ppo_trainer.log_stats(stats, batch, rewards)
         print(stats)
 
