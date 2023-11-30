@@ -4,12 +4,10 @@ import os
 import torch
 import wandb
 from accelerate import Accelerator
-from peft import IA3Config, LoraConfig, prepare_model_for_kbit_training
+from peft import IA3Config, prepare_model_for_kbit_training
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from transformers.modeling_utils import unwrap_model
-from transformers.utils import is_peft_available
-from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
 from .secure_env import read_secure_file
 from .dataset import load_extras
 from .tf_idf import build_tfidf
@@ -17,65 +15,6 @@ from .tf_idf import build_tfidf
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM, DPOTrainer
 from lib.wandb import retrieve_checkpoint
 
-class TfIdfTrainer(SFTTrainer):
-    def __init__(self, *args, **kwargs):
-        super(TfIdfTrainer, self).__init__(*args, **kwargs)
-
-    def initialize_metric(self, dataset, config, tokenizer):
-        # Load guidelines
-        extras = load_extras(config)
-
-        # Build tf-idf matrix
-        print('Build the tf-idf matrix for guidelines')
-        self.tfidf = build_tfidf(extras['guideline'])
-
-        # Build the label matrix
-        print('Build the label vector (for indexing)')
-        self.labels = [g['label'] for g in extras['guideline']]
-        raise NotImplementedError()
-
-    def compute_loss(self, model, inputs, return_outputs=False):
-        # This code is totally mine and not a copy paste from https://github.com/huggingface/transformers/blob/ce315081340fdf6846f16c321eb53878b6272d53/src/transformers/trainer.py
-        # Get label and predication tokens
-        if self.label_smoother is not None and "labels" in inputs:
-            labels = inputs.pop("labels")
-        else:
-            labels = None
-        outputs = model(**inputs)
-
-        print(outputs)
-        print(labels)
-
-        # Save past state if it exists
-        # TODO: this needs to be fixed and made cleaner later.
-        if self.args.past_index >= 0:
-            self._past = outputs[self.args.past_index]
-
-        if labels is not None:
-            unwrapped_model = unwrap_model(model)
-            if is_peft_available() and isinstance(unwrapped_model, PeftModel):
-                model_name = unwrapped_model.base_model.model._get_name()
-            else:
-                model_name = unwrapped_model._get_name()
-            if model_name in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
-                loss = self.label_smoother(outputs, labels, shift_labels=True)
-            else:
-                loss = self.label_smoother(outputs, labels)
-        else:
-            if isinstance(outputs, dict) and "loss" not in outputs:
-                raise ValueError(
-                    "The model did not return a loss from the inputs, only the following keys: "
-                    f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
-                )
-            # We don't use .loss here since the model may return tuples instead of ModelOutput.
-            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
-
-        return (loss, outputs) if return_outputs else loss
-
-METRIC_LOSS_DICT = {
-    "accuracy": SFTTrainer,
-    "tfidf": TfIdfTrainer
-}
 
 def init_configs(config):
     bf16_support = torch.cuda.is_bf16_supported()
@@ -106,7 +45,7 @@ def init_configs(config):
             "lm_head",
         ],
         feedforward_modules=["down_proj"],
-        init_ia3_weights=not config["wandb_parameters"]["start_from_checkpoint"],
+        init_ia3_weights=config["wandb_parameters"]["reinit_weights"],
     )
 
     return bnb_config, ia3_config
@@ -133,15 +72,20 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     # Set up model for training
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"][
         "gradient_checkpointing"])
-    # model = get_peft_model(model, ia3_config)
+
+    # Build the training arguments
+    log_with = None
+    if config["wandb_parameters"].get("enabled", True):
+        log_with="wandb"
+
     train_args = TrainingArguments(
-        output_dir=config["model_folders"]['output_dir'],
+        output_dir=config["model_folders"]["output_dir"],
         warmup_steps=5,
         optim="paged_adamw_8bit",
         save_strategy="steps",  # Save the model checkpoint every logging step
         evaluation_strategy="steps",  # Evaluate the model every logging step
         do_eval=True,
-        report_to=["wandb"],
+        report_to=log_with,
         run_name=config["wandb_parameters"]["run_name"],
         load_best_model_at_end=True,
         bf16=torch.cuda.is_bf16_supported(),
@@ -152,7 +96,6 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
     )
 
     return model, tokenizer, train_args
-
 
 def create_all_path(config: dict):
     for key in config["model_folders"].keys():
@@ -238,12 +181,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config):
     return trainer
 
 def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf, config):
-    # List of metrics
-    loss_type = config["loss"]["type"]
-    if not loss_type in METRIC_LOSS_DICT:
-        raise Exception("unrecognized loss type {}".format(loss_type))
-    trainer_builder = METRIC_LOSS_DICT[loss_type]
-    
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
     tokenizer.padding_side = "right"
@@ -262,7 +199,7 @@ def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf, config):
                                                                                     desc="Estimating max seq length"))
     print(f"Max seq length: {max_seq_length}")
 
-    trainer = trainer_builder(
+    trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
         args=train_args,

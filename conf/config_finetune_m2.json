@@ -42,10 +42,6 @@
         "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
     },
 
-    "loss": {
-        "type": "tfidf"
-    },
-
     "wandb_parameters" : {
         "start_from_checkpoint": true,
         "baseline_name" : "generalist-model",

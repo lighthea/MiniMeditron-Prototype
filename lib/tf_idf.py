@@ -99,5 +99,9 @@ def build_tfidf(guidelines: list[str]):
     tfidf = transformer.transform(counts + 1).toarray() # Smoothing of the count
 
     # Running PCA on tf-idf matrix to select the important words
-    # Nope
-    return tfidf
+    pca = PCA(n_components=100)
+    pca.fit(tfidf)
+
+    # Finally transform the tfidf matrix into a smaller collection
+    compact_tfidf = pca.transform(tfidf)
+    return compact_tfidf, pca, transformer

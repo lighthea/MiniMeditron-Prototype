@@ -29,18 +29,23 @@ def main():
     conf_file = sys.argv[1]
     config = load_config(conf_file)
     
+    log_with = None
+    if config["wandb_parameters"].get("enabled", True):
+        log_with="wandb"
+
     model_name = config["general_settings"]["base_model_id"]
     ppo_config = PPOConfig(
+        # output_dir=config["model_folders"]["output_dir"],
         model_name=model_name,
         learning_rate=config["model_parameters"]["learning_rate"],
         gradient_accumulation_steps=config["model_parameters"]["gradient_accumulation_steps"],
         optimize_device_cache=True,
-        log_with="wandb",
+        log_with=log_with,
         batch_size=config["model_parameters"]["per_device_train_batch_size"],
         task_name=config["wandb_parameters"]["run_name"],
         tracker_project_name=config["wandb_parameters"]["wandb_project"],
     )
-
+    
     # Initialize the wandb project
     init_wandb_project(config)
 
@@ -48,19 +53,22 @@ def main():
     # Not used in practice (I have no clue on how to make it work with PPO trainer)
     bnb_config, ia3_config = init_configs(config)
 
-    # Now let's build the model, the reference model, and the tokenizer. We first
-    # load the model in bfloat16 to save memory using `transformers`
-    # model = AutoModelForCausalLM.from_pretrained(ppo_config.model_name, torch_dtype=torch.bfloat16)
-
     # And then we pass the loaded model to `AutoModelForCausalLMWithValueHead`
+    
+    if config["wandb_parameters"]["start_from_checkpoint"]:
+        source = config["chekpoint_folder"]
+    else:
+        source = ppo_config.model_name
+
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
-        ppo_config.model_name,
+        source,
         peft_config=ia3_config,
         device_map={ "": Accelerator().local_process_index }
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name) #, add_eos_token=True)
+    tokenizer = AutoTokenizer.from_pretrained(source, add_eos_token=True)
     tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = 'left'
     # tokenizer.padding_side = 'right'
 
     # Define the reward function as a random number between 0 and 1
@@ -68,14 +76,13 @@ def main():
         return torch.rand(len(texts))
 
     dataset: DatasetDict = load_dataset(config, tokenizer)
+    dataset.cleanup_cache_files()
     # dataset = dataset.rename_column("text", "query")
-
-    input_size = LengthSampler(2, 512)
 
     def tokenize(sample):
         prompt = sample["text"]
 
-        sample["input_ids"] = tokenizer.encode(prompt)[: input_size()]
+        sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=4096)
         sample["query"] = tokenizer.decode(sample["input_ids"])
         return sample
 
@@ -95,7 +102,7 @@ def main():
         tokenizer=tokenizer,
     )
 
-    max_new_tokens = 128
+    max_new_tokens = 512
 
     generation_kwargs = {
         "min_length": -1,
@@ -106,8 +113,7 @@ def main():
         "max_new_tokens": max_new_tokens
     }
 
-    # tokenizer.padding_side = 'left'
-
+    tokenizer.padding_side = "left"
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
