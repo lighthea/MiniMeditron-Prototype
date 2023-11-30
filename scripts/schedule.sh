@@ -9,4 +9,5 @@ runai submit \
 		--image $REGISTRY/$IMG_PROJECT/$IMG_NAME:latest \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen" \
+		--environment BRANCH_NAME="antoine" \
     --command -- /entrypoint.sh sleep infinity
