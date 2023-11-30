@@ -82,7 +82,7 @@ def main():
     def tokenize(sample):
         prompt = sample["text"]
 
-        sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=4096)
+        sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=2048)
         sample["query"] = tokenizer.decode(sample["input_ids"])
         return sample
 
@@ -102,7 +102,7 @@ def main():
         tokenizer=tokenizer,
     )
 
-    max_new_tokens = 512
+    max_new_tokens = 4096
 
     generation_kwargs = {
         "min_length": -1,
@@ -110,10 +110,10 @@ def main():
         "top_p": 1.0,
         "do_sample": True,
         "pad_token_id": tokenizer.eos_token_id,
-        "max_new_tokens": max_new_tokens
+        "max_new_tokens": max_new_tokens,
     }
 
-    tokenizer.padding_side = "left"
+    # tokenizer.padding_side = "right"
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 
@@ -121,7 +121,7 @@ def main():
         response_tensors = []
         for query in query_tensors:
             response = ppo_trainer.generate(query, **generation_kwargs)
-            response_tensors.append(response.squeeze()[-max_new_tokens:])
+            response_tensors.append(response)
         batch["response"] = [tokenizer.decode(r.squeeze()) for r in response_tensors]
 
         # Compute reward score
