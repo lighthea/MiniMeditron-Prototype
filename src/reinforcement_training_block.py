@@ -8,7 +8,7 @@ from accelerate import Accelerator
 from peft import LoraConfig
 from datasets import DatasetDict
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
+from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer, DataCollatorForCompletionOnlyLM
 from trl.core import LengthSampler
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -63,6 +63,7 @@ def main():
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         source,
         peft_config=ia3_config,
+        # quantization_config=bnb_config,
         device_map={ "": Accelerator().local_process_index }
     )
 
@@ -76,13 +77,23 @@ def main():
         return torch.rand(len(texts))
 
     dataset: DatasetDict = load_dataset(config, tokenizer)
-    dataset.cleanup_cache_files()
+    # dataset.cleanup_cache_files()
+    
+    # Checks if the instruction template is the first token of the first prompt
+    instruction_template = "<|user|>"
+    response_template = "<|assistant|>"
+    instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
+    response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
+
     # dataset = dataset.rename_column("text", "query")
 
     def tokenize(sample):
         prompt = sample["text"]
 
-        sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=2048)
+        # sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=4096, add_special_tokens=True)
+        sample["input_ids"] = instruction_template_ids + \
+            tokenizer.encode(prompt, padding="max_length", max_length=2048, add_special_tokens=False) + \
+            response_template_ids
         sample["query"] = tokenizer.decode(sample["input_ids"])
         return sample
 
@@ -93,6 +104,11 @@ def main():
     # We make sure to use the `Adam` optimizer on the model parameters that requires gradients
     optimizer = Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)
 
+    # collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
+    #                                            response_template=response_template_ids,
+    #                                            tokenizer=tokenizer,
+    #                                            mlm=False)
+
     ppo_trainer = PPOTrainer(
         config=ppo_config,
         model=model,
@@ -102,7 +118,7 @@ def main():
         tokenizer=tokenizer,
     )
 
-    max_new_tokens = 4096
+    max_new_tokens = 1024
 
     generation_kwargs = {
         "min_length": -1,
@@ -113,7 +129,7 @@ def main():
         "max_new_tokens": max_new_tokens,
     }
 
-    # tokenizer.padding_side = "right"
+    tokenizer.padding_side = "right"
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
         query_tensors = batch["input_ids"]
 

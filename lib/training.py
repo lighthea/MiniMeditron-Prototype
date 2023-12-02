@@ -118,7 +118,7 @@ def init_wandb_project(config: dict) -> None:
     # Wandb Login
     print("Logging into wandb")
     wandb.login(key=config["wandb_parameters"]['wandb_key'])
-    if len(config["wandb_parameters"]["wandb_project"]) > 0:
+    if len(config["wandb_parameters"]["wandb_project"]) > 0 and config["wandb_parameters"].get("enabled", True):
         os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 

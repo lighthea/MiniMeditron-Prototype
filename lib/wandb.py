@@ -68,8 +68,12 @@ def retrieve_checkpoint(config: dict) -> str | None:
     if os.path.exists(os.path.join(config["wandb_parameters"]["wandb_folder"])):
         return config["wandb_parameters"]["wandb_folder"]
 
-    run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
-    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{str(config["wandb_parameters"]["baseline_name"])}:latest',
+    baseline = config["wandb_parameters"]["baseline_name"]
+    if not ":" in baseline:
+        baseline += ":latest"
+
+    run = wandb.init(entity="alexs-team", config={ "init_ia3_weights": False }, project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
+    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{baseline}',
                                 type='model')
     artifact_dir = artifact.download(config["wandb_parameters"]["wandb_folder"])
     return artifact_dir
