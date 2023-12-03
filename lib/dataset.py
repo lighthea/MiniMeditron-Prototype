@@ -8,6 +8,8 @@ from tqdm import tqdm
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
 
+import pandas as pd
+import json
 
 def blanket(config: dict) -> str:
     file = config["general_settings"]['process_file']
@@ -157,6 +159,13 @@ def save_dataset(dataset: Dataset, config: dict):
     return dataset
 
 
+def generate_contrastive_dataset(config, dataset):
+    pd_dataset = pd.DataFrame(dataset)
+    pd_dataset["labels"] = pd_dataset["labels"].apply(lambda label : label.lower())
+
+    groupped = pd_dataset.groupby("labels")
+    return groupped
+
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
     Load the dataset from the disk or create it if it doesn't exist
@@ -166,12 +175,15 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
 
     # Load the tokenized dataset if it exists
-    dataset = load_pretrained_dataset(config)
-    if dataset is not None:
-        return dataset
+    # dataset = load_pretrained_dataset(config)
+    # if dataset is not None:
+    #     return dataset
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)
+
+    if config["general_settings"]["task"] == "cl":
+        return generate_contrastive_dataset(config, dataset)
 
     # Fill the prompt with the dataset
     dataset = fill_prompt_with_dataset(config, dataset)
