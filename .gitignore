@@ -3,7 +3,9 @@
 /data/raw/
 /Guidelines
 /data/knowledge_database/
-**/__pycache__/**
+**/__pycache__/
 wandb/
 notes.md
 diff.patch
+data/exports/
+.vscode/

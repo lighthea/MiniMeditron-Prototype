@@ -1,0 +1,13 @@
+diff a/.gitignore b/.gitignore	(rejected hunks)
+@@ -3,7 +3,9 @@
+ /data/raw/
+ /Guidelines
+ /data/knowledge_database/
+-**/__pycache__/**
++**/__pycache__/
+ wandb/
+ notes.md
+ diff.patch
++data/exports/
++.vscode/
+\ No newline at end of file
