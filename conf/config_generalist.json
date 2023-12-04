@@ -21,7 +21,7 @@
         "with_token" : true,
         "with_output": false,
         "force_retokenize": false,
-        "test_size": 0.01
+        "test_size": 0.05
 
     },
 
