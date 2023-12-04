@@ -48,13 +48,6 @@
 
     "peft_parameters" : {
         "target_modules" : [
-            "q_proj",
-            "k_proj",
-            "v_proj",
-            "o_proj",
-            "gate_proj",
-            "up_proj",
-            "down_proj",
             "lm_head"
         ],
         "reinit_weights" : true
