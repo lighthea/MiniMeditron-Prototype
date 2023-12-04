@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
+from lib.tf_idf import retrieve_n_best_guidelines
 
 import pandas as pd
 import json
@@ -159,12 +160,21 @@ def save_dataset(dataset: Dataset, config: dict):
     return dataset
 
 
-def generate_contrastive_dataset(config, dataset):
+def generate_contrastive_dataset(config, dataset, n_pairs=10000, n_retrieval=10):
     pd_dataset = pd.DataFrame(dataset)
     pd_dataset["labels"] = pd_dataset["labels"].apply(lambda label : label.lower())
 
-    groupped = pd_dataset.groupby("labels")
-    return groupped
+    for _ in range(n_pairs):
+        guideline = pd_dataset.sample()
+
+        # On average should be far from anchor (hopefully)
+        neg_pair = pd_dataset.sample()
+
+        pos_pair = NotImplemented()
+
+
+    # groupped = pd_dataset.groupby("labels")
+    # return groupped
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
@@ -174,10 +184,10 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     :return: the dataset
     """
 
-    # Load the tokenized dataset if it exists
-    # dataset = load_pretrained_dataset(config)
-    # if dataset is not None:
-    #     return dataset
+    Load the tokenized dataset if it exists
+    dataset = load_pretrained_dataset(config)
+    if dataset is not None:
+        return dataset
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)

@@ -4,7 +4,7 @@ import sys
 import torch
 from datasets import DatasetDict
 from transformers import AutoTokenizer
-from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer
+from trl import PPOConfig, AutoModelForCausalLMWithValueHead, PPOTrainer, DataCollatorForCompletionOnlyLM
 from accelerate import Accelerator
 
 
@@ -19,8 +19,8 @@ from tqdm import tqdm
 from lib.dataset import load_dataset
 
 
-def collator(data):
-    return dict((key, [d[key] for d in data]) for key in data[0])
+# def collator(data):
+#     return dict((key, [d[key] for d in data]) for key in data[0])
 
 def main():
     # Load configuration
@@ -47,7 +47,7 @@ def main():
     model = AutoModelForCausalLMWithValueHead.from_pretrained(ppo_config.model_name, device_map={ "": Accelerator().local_process_index })
     tokenizer = AutoTokenizer.from_pretrained(ppo_config.model_name)
     tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.padding_side = 'left'
+    tokenizer.padding_side = 'right'
 
     # Define the reward function as a random number between 0 and 1
     def reward_model(queries, responses):
@@ -56,6 +56,16 @@ def main():
 
     train_dataset: DatasetDict = load_dataset(config, tokenizer)
     train_dataset = train_dataset.rename_column("text", "query")
+
+    instruction_template = "<|user|>"
+    response_template = "<|assistant|>"
+    instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
+    response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
+
+    collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
+                                            response_template=response_template_ids,
+                                            tokenizer=tokenizer,
+                                            mlm=False)
 
     def tokenize(sample):
         sample["input_ids"] = tokenizer.encode(sample["query"], padding="max_length", max_length=2048)
