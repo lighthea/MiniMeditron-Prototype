@@ -28,9 +28,8 @@ def init_configs(config):
         config["chekpoint_folder"] = retrieve_checkpoint(config)
         # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
-    ia3_config = IA3Config(
-        task_type="CAUSAL_LM",
-        target_modules=[
+    if config["peft_parameters"]["target_modules"] is None:
+        target_modules = [
             "q_proj",
             "k_proj",
             "v_proj",
@@ -39,9 +38,15 @@ def init_configs(config):
             "up_proj",
             "down_proj",
             "lm_head",
-        ],
+        ]
+    else:
+        target_modules = config["peft_parameters"]["target_modules"]
+
+    ia3_config = IA3Config(
+        task_type="CAUSAL_LM",
+        target_modules= target_modules,
         feedforward_modules=["down_proj"],
-        init_ia3_weights=config["wandb_parameters"]["reinit_weights"],
+        init_ia3_weights=config["peft_parameters"]["reinit_weights"],
     )
 
     return bnb_config, ia3_config
