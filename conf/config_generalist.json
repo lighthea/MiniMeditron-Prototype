@@ -48,6 +48,7 @@
 
     "peft_parameters" : {
         "target_modules" : [
+            "down_proj",
             "lm_head"
         ],
         "reinit_weights" : true
