@@ -77,7 +77,7 @@ def main():
         return torch.rand(len(texts))
 
     dataset: DatasetDict = load_dataset(config, tokenizer)
-    # dataset.cleanup_cache_files()
+    dataset.cleanup_cache_files()
     
     # Checks if the instruction template is the first token of the first prompt
     instruction_template = "<|user|>"
@@ -104,11 +104,6 @@ def main():
     # We make sure to use the `Adam` optimizer on the model parameters that requires gradients
     optimizer = Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)
 
-    # collator = DataCollatorForCompletionOnlyLM(instruction_template=instruction_template_ids,
-    #                                            response_template=response_template_ids,
-    #                                            tokenizer=tokenizer,
-    #                                            mlm=False)
-
     ppo_trainer = PPOTrainer(
         config=ppo_config,
         model=model,
@@ -131,7 +126,7 @@ def main():
 
     tokenizer.padding_side = "right"
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
-        query_tensors = batch["input_ids"]
+        query_tensors = batch["labels"]
 
         # Get response from SFTModel
         response_tensors = []
