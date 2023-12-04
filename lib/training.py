@@ -28,7 +28,7 @@ def init_configs(config):
         config["chekpoint_folder"] = retrieve_checkpoint(config)
         # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
-    if config["peft_parameters"]["target_modules"] is None:
+    if not config["peft_parameters"].get("target_modules", None):
         target_modules = [
             "q_proj",
             "k_proj",
@@ -71,7 +71,7 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         tokenizer.pad_token = tokenizer.eos_token
 
     # Set up model for training
-    if config["model_parameters"]["gradient_checkpointing"]:
+    if config["model_parameters"].get("gradient_checkpointing", False):
          model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
     # model = get_peft_model(model, ia3_config)
     train_args = TrainingArguments(
