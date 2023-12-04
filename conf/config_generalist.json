@@ -58,6 +58,6 @@
             "lm_head"
         ],
 
-        "reinit_weights" : false
+        "reinit_weights" : true
     }
 }
