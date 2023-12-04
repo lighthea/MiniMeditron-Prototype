@@ -190,6 +190,8 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
+        if config["dataset_generation"].get("padding_side") is not None:
+            tokenizer.padding_side = config["dataset_generation"]["padding_side"]
         tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
                                      padding="max_length")
         return {"input_ids": tokenized}

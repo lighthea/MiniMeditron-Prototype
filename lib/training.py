@@ -131,7 +131,6 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
 
 
 def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
-    tokenizer.padding_side = "right"
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -147,7 +146,6 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
 
 
 def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
-    tokenizer.padding_side = "left"
     # Print dataset structure
     print(dataset["train"])
     # Determine max seq length
@@ -179,7 +177,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
 def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf):
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
-    tokenizer.padding_side = "right"
     # Checks if the instruction template is the first token of the first prompt
     instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
