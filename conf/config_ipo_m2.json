@@ -46,7 +46,7 @@
     "wandb_parameters" : {
         "start_from_checkpoint": true,
         "baseline_name" : "model2-qa",
-        "run_name": "model2-ipo-michael",
+        "run_name": "model2-ipo-cos-sim",
         "wandb_key": "'ENCRYPT{r7mfHokpVPge9wKJnIVRtQ==;NutfIIDjyMpweJ3cgI+YHVrvyyfu0Dqqyn/Ujpp0drVPJuHBzlpdlQ==;RucHJE+LLM5U/dLde7eAOA==}'",
         "wandb_project": "minimed-finetune-proto0",
         "wandb_folder": "data/exports/wandb"

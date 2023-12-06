@@ -150,7 +150,6 @@ def accuracy_based_pair(example, dataset: Dataset, tokenizer):
 def format_chat_for_preference_optimisation(config, example, dataset: Dataset, tokenizer):
     match config["dpo_parameters"]["similarity"]:
         case "cos":
-            print("Currently using cosine similarity for DPO training")
             return cos_sim_based_pair(example, dataset, tokenizer)
         case _:
             return accuracy_based_pair(example, dataset, tokenizer)
@@ -174,13 +173,13 @@ def save_dataset(dataset: Dataset, config: dict):
     return dataset
 
 
-def insert_embeddings(config: dict, dataset: Dataset):
+def fill_with_embeddings(config: dict, dataset: Dataset):
     if "embedding" not in config["dpo_parameters"]:
         return
     
     match config["dpo_parameters"]["embedding"]:
         case "sentence_transformer":
-            dataset = insert_semantic_embeddings(dataset)
+            return insert_semantic_embeddings(dataset)
 
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
@@ -200,7 +199,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     dataset = construct_raw_dataset(config)
 
     # Insert potential embedding
-    insert_embeddings(config, dataset)
+    dataset = fill_with_embeddings(config, dataset)
 
     # Fill the prompt with the dataset
     dataset = fill_prompt_with_dataset(config, dataset)
