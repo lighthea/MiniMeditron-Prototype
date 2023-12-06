@@ -80,20 +80,20 @@ def main():
     dataset.cleanup_cache_files()
     
     # Checks if the instruction template is the first token of the first prompt
-    instruction_template = "<|user|>"
-    response_template = "<|assistant|>"
-    instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
-    response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
+    # instruction_template = "<|user|>"
+    # response_template = "<|assistant|>"
+    # instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
+    # response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]
 
     # dataset = dataset.rename_column("text", "query")
 
     def tokenize(sample):
         prompt = sample["text"]
 
-        # sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=4096, add_special_tokens=True)
-        sample["input_ids"] = instruction_template_ids + \
-            tokenizer.encode(prompt, padding="max_length", max_length=2048, add_special_tokens=False) + \
-            response_template_ids
+        sample["input_ids"] = tokenizer.encode(prompt, padding="max_length", max_length=4096, add_special_tokens=True)
+        # sample["input_ids"] = instruction_template_ids + \
+        #     tokenizer.encode(prompt, padding="max_length", max_length=2048, add_special_tokens=False) + \
+        #     response_template_ids
         sample["query"] = tokenizer.decode(sample["input_ids"])
         return sample
 
@@ -124,9 +124,9 @@ def main():
         "max_new_tokens": max_new_tokens,
     }
 
-    tokenizer.padding_side = "right"
+    tokenizer.padding_side = "left"
     for epoch, batch in tqdm(enumerate(ppo_trainer.dataloader)):
-        query_tensors = batch["labels"]
+        query_tensors = batch["input_ids"]
 
         # Get response from SFTModel
         response_tensors = []
