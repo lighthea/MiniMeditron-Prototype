@@ -26,7 +26,6 @@ def init_configs(config):
     # Initialize the IA3 config
     if config["wandb_parameters"]["start_from_checkpoint"]:
         config["chekpoint_folder"] = retrieve_checkpoint(config)
-        # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
     if not config["peft_parameters"].get("target_modules", None):
         target_modules = [

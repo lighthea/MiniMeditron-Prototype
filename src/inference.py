@@ -15,8 +15,9 @@ from lib.wandb import retrieve_checkpoint
 def main():
     # Retrieve all config file paths from command line arguments
     config_files = sys.argv[1:]  # This will take all arguments except the script name
-    bnb_config, ia3_conf = init_configs(config_files[0])
     config = load_config(config_files[0])
+    bnb_config, ia3_conf = init_configs(config)
+
     model, tokenizer, _ = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
     adapter_names = []
     # Loop over each configuration file and run the pipeline
