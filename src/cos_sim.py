@@ -17,7 +17,7 @@ def insert_semantic_embeddings(dataset: Dataset, col_name="embeddings"):
         })
 
 def cos_sim_based_pair(example, dataset: Dataset, tokenizer):
-    iterable_dataset = dataset.to_iterable_dataset
+    iterable_dataset = dataset.to_iterable_dataset()
 
     max_sim = float('inf')
     min_sim = 0
