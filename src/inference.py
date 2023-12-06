@@ -15,7 +15,7 @@ from lib.wandb import retrieve_checkpoint
 def main():
     # Retrieve all config file paths from command line arguments
     config_files = sys.argv[1:]  # This will take all arguments except the script name
-    bnb_config, ia3_conf = init_configs()
+    bnb_config, ia3_conf = init_configs(config_files[0])
     config = load_config(config_files[0])
     model, tokenizer, _ = setup_model_and_training_finetuning(config, bnb_config, ia3_conf)
     adapter_names = []
@@ -27,19 +27,16 @@ def main():
       print(conf_file)
       adapter = retrieve_checkpoint(config)
       model.load_adapter(adapter, adapter_name = name)
+
     with open(config_files[-1], "r") as f:
       input_text = f.read()
+
     for adapter in adapter_names:
       print(input_text)
       model.set_adapter(adapter)
       tokenized_input = tokenizer(input_text, return_tensors='pt')
       output = model.generate(**tokenized_input)
       input_text = tokenizer.decode(output[0], skip_special_tokens=True)
-      
 
-  
-    
-
-    
 if __name__ == "__main__":
     main()
