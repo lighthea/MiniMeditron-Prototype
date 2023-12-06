@@ -140,7 +140,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         case _:
             return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
-def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config):
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -155,7 +155,7 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
     return trainer
 
 
-def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
+def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config):
     # Print dataset structure
     print(dataset["train"])
     # Determine max seq length
