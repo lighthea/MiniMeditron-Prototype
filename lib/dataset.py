@@ -105,8 +105,11 @@ def fill_prompt_with_dataset(config: dict, dataset: Dataset) -> Dataset:
     if with_context:
         dataset = add_bm25_context(dataset, config)
 
+    remove_columns = ["text"]
+    if with_context:
+        remove_columns.append("context")
     return dataset.map(lambda x: create_query(partial_prompt, x, with_context),
-                       remove_columns=["text", "context" if with_context else None])
+                       remove_columns=remove_columns)
 
 
 def format_chat_for_qa(example, config, tokenizer):
@@ -209,6 +212,8 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
+        if config["dataset_generation"].get("padding_side") is not None:
+            tokenizer.padding_side = config["dataset_generation"]["padding_side"]
         tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
                                      padding="max_length")
         return {"input_ids": tokenized}
