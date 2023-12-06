@@ -5,6 +5,7 @@
         "task": "po",
         "use_flash_attn": false
     },
+
     "general_folders" : {
         "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
         "train_folder": "data/knowledge_database/generated_patients/structured_patients",
@@ -23,7 +24,6 @@
         "with_token": false,
         "with_output": false,
         "test_size": 0.1
-
     },
 
     "model_parameters" : {
@@ -49,7 +49,8 @@
         "run_name": "model2-ipo-guillaume",
         "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
         "wandb_project": "minimed-finetune-proto0",
-        "wandb_folder": "data/exports/wandb"
+        "wandb_folder": "data/exports/wandb",
+        "reinit_weights" : true
 
     }
 }

@@ -32,9 +32,8 @@ def init_configs(config):
         config["chekpoint_folder"] = retrieve_checkpoint(config)
         # ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
-    ia3_config = IA3Config(
-        task_type="CAUSAL_LM",
-        target_modules=[
+    if not config["peft_parameters"].get("target_modules", None):
+        target_modules = [
             "q_proj",
             "k_proj",
             "v_proj",
@@ -43,9 +42,15 @@ def init_configs(config):
             "up_proj",
             "down_proj",
             "lm_head",
-        ],
+        ]
+    else:
+        target_modules = config["peft_parameters"]["target_modules"]
+
+    ia3_config = IA3Config(
+        task_type="CAUSAL_LM",
+        target_modules= target_modules,
         feedforward_modules=["down_proj"],
-        init_ia3_weights=config["wandb_parameters"]["reinit_weights"],
+        init_ia3_weights=config["peft_parameters"]["reinit_weights"],
     )
 
     return bnb_config, ia3_config
@@ -69,15 +74,14 @@ def setup_model_and_training_finetuning(config: dict, bnb_config: BitsAndBytesCo
         tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'], add_eos_token=True)
         tokenizer.pad_token = tokenizer.eos_token
 
-    # Set up model for training
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"][
-        "gradient_checkpointing"])
-
     # Build the training arguments
     log_with = None
     if config["wandb_parameters"].get("enabled", True):
         log_with="wandb"
 
+    if config["model_parameters"].get("gradient_checkpointing", False):
+         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=config["model_parameters"]["gradient_checkpointing"])
+    # model = get_peft_model(model, ia3_config)
     train_args = TrainingArguments(
         output_dir=config["model_folders"]["output_dir"],
         warmup_steps=5,
@@ -136,8 +140,7 @@ def launch_training(model, tokenizer, train_args, dataset, ia3_conf, config):
         case _:
             return Exception("Unrecognized value for task: {}".format(config["general_settings"]["task"]))
 
-def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, config):
-    tokenizer.padding_side = "right"
+def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf):
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -151,8 +154,8 @@ def launch_training_finetune(model, tokenizer, train_args, dataset, ia3_conf, co
 
     return trainer
 
-def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config):
-    tokenizer.padding_side = "left"
+
+def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf):
     # Print dataset structure
     print(dataset["train"])
     # Determine max seq length
@@ -183,8 +186,6 @@ def launch_training_po(model, tokenizer, train_args, dataset, ia3_conf, config):
 def launch_training_qa(model, tokenizer, train_args, dataset, ia3_conf, config):
     instruction_template = "<|user|>"
     response_template = "<|assistant|>"
-    tokenizer.padding_side = "right"
-
     # Checks if the instruction template is the first token of the first prompt
     instruction_template_ids = tokenizer.encode(instruction_template, add_special_tokens=False)
     response_template_ids = tokenizer.encode("\n" + response_template, add_special_tokens=False)[2:]

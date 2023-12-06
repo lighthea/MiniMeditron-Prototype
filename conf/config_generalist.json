@@ -2,12 +2,13 @@
     "general_settings" : {
             "process_file": "data/structure/pipelines/tasks/learning.json",
             "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-            "task": "finetune"
-    },
-    "general_folders" : {
-        "train_folder": "data/knowledge_database/guidelines/structured_guidelines",
-        "use_flash_attn": true
+            "task": "finetune",
+            "use_flash_attn": true
 
+    },
+
+    "general_folders" : {
+        "train_folder": "data/knowledge_database/guidelines/structured_guidelines"
     },
 
     "model_folders" : {
@@ -20,9 +21,10 @@
         "with_token" : true,
         "with_output": false,
         "force_retokenize": false,
-        "test_size": 0.01
+        "test_size": 0.05
 
     },
+
     "model_parameters" : {
         "num_train_epochs": 2,
         "per_device_train_batch_size": 3,
@@ -40,6 +42,21 @@
         "baseline_name" : "generalist-model",
         "run_name": "generalist-model",
         "wandb_key": "a51dc03985c11e74e9ef700cd3093e6c78636177",
-        "wandb_project": "minimed-finetune-proto0"
+        "wandb_project": "minimed-finetune-proto0",
+        "wandb_folder": "data/exports/wandb"
+    },
+
+    "peft_parameters" : {
+        "target_modules" : [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head"
+        ],
+        "reinit_weights" : true
     }
 }

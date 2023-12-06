@@ -4,7 +4,7 @@ IMG_NAME=prot0
 
 runai submit \
 		--name "finetune-minimeditron" \
-		--gpu 2 \
+		--gpu 1 \
 		--image $REGISTRY/$IMG_PROJECT/$IMG_NAME:latest \
 		--large-shm --host-ipc \
 		--environment EPFML_LDAP="sallinen" \

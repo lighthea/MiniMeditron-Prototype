@@ -1,0 +1,56 @@
+{
+    "general_settings" : {
+            "process_file": "",
+            "base_model_id": "",
+            "task": "",
+            "use_flash_attn": false
+    },
+
+    "general_folders" : {
+        "guidelines_folder": "",
+        "train_folder": "",
+        "base_folder": ""
+    },
+
+    "model_folders" : {
+        "tokenized_data_path": "",
+        "output_dir": "",
+        "save_path": ""
+    },
+
+    "dataset_generation" : {
+        "force_retokenize": false,
+        "n_context_guidelines": 0,
+        "with_token": false,
+        "with_output": false,
+        "test_size": 0.0
+    },
+
+    "model_parameters" : {
+        "num_train_epochs": 0,
+        "per_device_train_batch_size": 0,
+        "per_device_eval_batch_size": 0,
+        "eval_steps" : 0,
+        "save_steps": 0,
+        "logging_steps": 0,
+        "learning_rate": 0,
+        "max_steps": 0,
+        "neftune_noise_alpha": 0,
+        "eval_accumulation_steps": 0,
+        "remove_unused_columns": false,
+        "gradient_checkpointing": false,
+        "gradient_accumulation_steps": 0,
+        "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
+    },
+
+    "wandb_parameters" : {
+        "start_from_checkpoint": false,
+        "baseline_name" : "",
+        "run_name": "",
+        "wandb_key": "",
+        "wandb_project": "",
+        "wandb_folder": "",
+        "reinit_weights" : false
+
+    }
+}
