@@ -7,8 +7,8 @@ sys.path.append(os.path.join(current_dir, '..'))
 
 from lib.training import init_configs, setup_model_and_training_finetuning, create_all_path, \
     load_config, \
-    init_wandb_project, launch_training
-
+    launch_training
+from lib.wandb import init_wandb_project
 from lib.dataset import load_dataset
 
 

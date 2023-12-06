@@ -64,6 +64,7 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
     return runs[0].id
 
 def init_wandb_project(config: dict) -> None:
+    
     # Wandb Login
     print("Logging into wandb")
     run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")

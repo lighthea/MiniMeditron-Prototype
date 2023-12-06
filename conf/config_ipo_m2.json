@@ -46,11 +46,28 @@
     "wandb_parameters" : {
         "start_from_checkpoint": true,
         "baseline_name" : "model2-qa",
-        "run_name": "model2-ipo",
+        "run_name": "model2-ipo-michael",
         "wandb_key": "'ENCRYPT{r7mfHokpVPge9wKJnIVRtQ==;NutfIIDjyMpweJ3cgI+YHVrvyyfu0Dqqyn/Ujpp0drVPJuHBzlpdlQ==;RucHJE+LLM5U/dLde7eAOA==}'",
         "wandb_project": "minimed-finetune-proto0",
-        "wandb_folder": "data/exports/wandb",
-        "reinit_weights" : true
+        "wandb_folder": "data/exports/wandb"
+    },
 
+    "dpo_parameters" : {
+        "embedding" : "sentence_transformer",
+        "similarity" : "cos"
+    },
+
+    "peft_parameters" : {
+        "target_modules" : [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head"
+        ],
+        "reinit_weights" : true
     }
 }

@@ -9,6 +9,8 @@ from lib.tf_idf import batch_bm25
 from lib.utils import retrieve_prompt
 from lib.tf_idf import retrieve_n_best_guidelines
 
+from cos_sim import *
+
 import pandas as pd
 import json
 
@@ -130,7 +132,7 @@ def format_chat_for_qa(example, config, tokenizer):
     return {"text": tokenized_output}
 
 
-def format_chat_for_preference_optimisation(example, dataset: Dataset, tokenizer):
+def accuracy_based_pair(example, dataset: Dataset, tokenizer):
     # select a wrong label
     wrong_label = random.choice([label for label in dataset["labels"] if label != example['labels']])
     chat_template_wrong = [{"role": "assistant",
@@ -143,6 +145,15 @@ def format_chat_for_preference_optimisation(example, dataset: Dataset, tokenizer
                                                            add_generation_prompt=False)
 
     return {"rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
+
+
+def format_chat_for_preference_optimisation(config, example, dataset: Dataset, tokenizer):
+    match config["dpo_parameters"]["similarity"]:
+        case "cos":
+            print("Currently using cosine similarity for DPO training")
+            return cos_sim_based_pair(example, dataset, tokenizer)
+        case _:
+            return accuracy_based_pair(example, dataset, tokenizer)
 
 
 def save_dataset(dataset: Dataset, config: dict):
@@ -163,21 +174,14 @@ def save_dataset(dataset: Dataset, config: dict):
     return dataset
 
 
-def generate_contrastive_dataset(config, dataset, n_pairs=10000, n_retrieval=10):
-    pd_dataset = pd.DataFrame(dataset)
-    pd_dataset["labels"] = pd_dataset["labels"].apply(lambda label : label.lower())
+def insert_embeddings(config: dict, dataset: Dataset):
+    if "embedding" not in config["dpo_parameters"]:
+        return
+    
+    match config["dpo_parameters"]["embedding"]:
+        case "sentence_transformer":
+            dataset = insert_semantic_embeddings(dataset)
 
-    for _ in range(n_pairs):
-        guideline = pd_dataset.sample()
-
-        # On average should be far from anchor (hopefully)
-        neg_pair = pd_dataset.sample()
-
-        pos_pair = NotImplemented()
-
-
-    # groupped = pd_dataset.groupby("labels")
-    # return groupped
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
@@ -187,16 +191,16 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     :return: the dataset
     """
 
-    Load the tokenized dataset if it exists
-    dataset = load_pretrained_dataset(config)
-    if dataset is not None:
-        return dataset
+    # Load the tokenized dataset if it exists
+    # dataset = load_pretrained_dataset(config)
+    # if dataset is not None:
+    #     return dataset
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)
 
-    if config["general_settings"]["task"] == "cl":
-        return generate_contrastive_dataset(config, dataset)
+    # Insert potential embedding
+    insert_embeddings(config, dataset)
 
     # Fill the prompt with the dataset
     dataset = fill_prompt_with_dataset(config, dataset)
@@ -207,8 +211,9 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
-        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset, tokenizer))
+        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(config, x, dataset, tokenizer))
         dataset = dataset.rename_column("text", "prompt")
+
     dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
