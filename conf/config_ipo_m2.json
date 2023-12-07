@@ -13,7 +13,7 @@
     },
 
     "model_folders" : {
-        "tokenized_data_path": "data/exports/dataset/model2_po/processed",
+        "tokenized_data_path": "data/exports/embeddings/dpo_cos",
         "output_dir": "data/exports/finetuned_models/model2_po",
         "save_path": "data/exports/finetuned_models/model2_po/checkpoints"
     },

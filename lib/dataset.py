@@ -191,9 +191,9 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
 
     # Load the tokenized dataset if it exists
-    # dataset = load_pretrained_dataset(config)
-    # if dataset is not None:
-    #     return dataset
+    dataset = load_pretrained_dataset(config)
+    if dataset is not None:
+        return dataset
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)
