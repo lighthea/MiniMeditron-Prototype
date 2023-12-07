@@ -13,7 +13,7 @@
     },
 
     "model_folders" : {
-        "tokenized_data_path": "data/exports/model2_ipo/accuracy",
+        "tokenized_data_path": "data/exports/embeddings/dpo_cos",
         "output_dir": "data/exports/finetuned_models/model2_po",
         "save_path": "data/exports/finetuned_models/model2_po/checkpoints"
     },
@@ -53,7 +53,8 @@
     },
 
     "dpo_parameters" : {
-        "similarity" : "accuracy"
+        "embedding" : "sentence_transformer",
+        "similarity" : "cos"
     },
 
     "peft_parameters" : {
