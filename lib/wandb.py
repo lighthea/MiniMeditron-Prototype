@@ -63,26 +63,12 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
     print(f"Last run id: {runs[0].id}")
     return runs[0].id
 
-def init_wandb_project(config: dict) -> None:
-    
-    # Wandb Login
-    print("Logging into wandb")
-    wandb.login(key=config["wandb_parameters"]['wandb_key'])
 
-    if len(config["wandb_parameters"]["wandb_project"]) > 0:
-        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
-
-    # if config["wandb_parameters"]["start_from_checkpoint"]:
-    #     config["chekpoint_folder"] = retrieve_checkpoint(config, run)
-
-
-def retrieve_checkpoint(config: dict, run) -> str | None:
-    # run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
-
+def retrieve_checkpoint(config: dict) -> str | None:
     if os.path.exists(os.path.join(config["wandb_parameters"]["wandb_folder"])):
         return config["wandb_parameters"]["wandb_folder"]
 
+    run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
     artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{str(config["wandb_parameters"]["baseline_name"])}:latest',
                                 type='model')
     artifact_dir = artifact.download(config["wandb_parameters"]["wandb_folder"])

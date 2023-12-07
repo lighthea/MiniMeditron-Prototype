@@ -24,11 +24,8 @@ def init_configs(config):
     )
 
     # Initialize the IA3 config
-    run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
     if config["wandb_parameters"]["start_from_checkpoint"]:
-        print("Starting from checkpoint")
         config["chekpoint_folder"] = retrieve_checkpoint(config)
-        ia3_config = IA3Config.from_pretrained(config["chekpoint_folder"])
 
     if not config["peft_parameters"].get("target_modules", None):
         target_modules = [
