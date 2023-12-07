@@ -74,7 +74,7 @@ def init_wandb_project(config: dict) -> None:
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
 
-def retrieve_checkpoint(config: dict, run) -> str | None:
+def retrieve_checkpoint(config: dict) -> str | None:
     # run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
 
     if os.path.exists(os.path.join(config["wandb_parameters"]["wandb_folder"])):
