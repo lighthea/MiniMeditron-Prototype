@@ -63,8 +63,20 @@ def retrieve_last_wandb_run_id(config: dict) -> str | None:
     print(f"Last run id: {runs[0].id}")
     return runs[0].id
 
+def init_wandb_project(config: dict) -> None:
+    
+    # Wandb Login
+    print("Logging into wandb")
+    wandb.login(key=config["wandb_parameters"]['wandb_key'])
 
-def retrieve_checkpoint(config: dict) -> str | None:
+    if len(config["wandb_parameters"]["wandb_project"]) > 0:
+        os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+
+
+def retrieve_checkpoint(config: dict, run) -> str | None:
+    # run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
+
     if os.path.exists(os.path.join(config["wandb_parameters"]["wandb_folder"])):
         return config["wandb_parameters"]["wandb_folder"]
 
