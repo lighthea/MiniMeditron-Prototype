@@ -67,15 +67,14 @@ def init_wandb_project(config: dict) -> None:
     
     # Wandb Login
     print("Logging into wandb")
-    run = wandb.init(entity="alexs-team", project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
     wandb.login(key=config["wandb_parameters"]['wandb_key'])
 
     if len(config["wandb_parameters"]["wandb_project"]) > 0:
         os.environ["WANDB_PROJECT"] = config["wandb_parameters"]["wandb_project"]
         os.environ["WANDB_LOG_MODEL"] = "checkpoint"
 
-    if config["wandb_parameters"]["start_from_checkpoint"]:
-        config["chekpoint_folder"] = retrieve_checkpoint(config, run)
+    # if config["wandb_parameters"]["start_from_checkpoint"]:
+    #     config["chekpoint_folder"] = retrieve_checkpoint(config, run)
 
 
 def retrieve_checkpoint(config: dict, run) -> str | None:
