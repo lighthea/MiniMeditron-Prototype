@@ -175,7 +175,7 @@ def save_dataset(dataset: Dataset, config: dict):
 
 def fill_with_embeddings(config: dict, dataset: Dataset):
     if "embedding" not in config["dpo_parameters"]:
-        return
+        return dataset
     
     match config["dpo_parameters"]["embedding"]:
         case "sentence_transformer":
