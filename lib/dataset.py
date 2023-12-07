@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from lib.tf_idf import batch_bm25, build_tfidf
 from lib.utils import retrieve_prompt
+from .dataset_gen import generate_dataset
 
 
 def blanket(config: dict) -> str:
@@ -127,20 +128,24 @@ def format_chat_for_qa(example, config, tokenizer):
     return {"text": tokenized_output}
 
 
-def format_chat_for_preference_optimisation(example, dataset: Dataset, tokenizer):
+def format_chat_for_preference_optimisation(dataset: Dataset, tokenizer):
     # select a wrong label
-    wrong_label = random.choice([label for label in dataset["labels"] if label != example['labels']])
-    chat_template_wrong = [{"role": "assistant",
-                            "content": wrong_label}]
-    chat_template_right = [{"role": "assistant",
-                            "content": example["labels"]}]
-    tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False,
-                                                           add_generation_prompt=False)
-    tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False,
-                                                           add_generation_prompt=False)
+    text, accepted, rejected = generate_dataset(dataset["labels"], dataset["text"])
+    tokenized_accepted, tokenized_rejected = [], []
 
-    return {"rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
-
+    for elem_accepted, elem_rejected in zip(accepted, rejected):
+        chat_template_wrong = [{"role": "assistant", "content": elem_accepted}]
+        chat_template_right = [{"role": "assistant", "content": elem_rejected}]
+        tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False,
+                                                            add_generation_prompt=False)
+        tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False,
+                                                            add_generation_prompt=False)
+        tokenized_accepted.append(tokenized_output_right)
+        tokenized_rejected.append(tokenized_output_wrong)
+    
+    dataset["text"] = text
+    dataset["rejected"] = tokenized_rejected
+    dataset["accepted"] = tokenized_accepted
 
 def save_dataset(dataset: Dataset, config: dict):
     """
@@ -185,7 +190,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
-        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(x, dataset, tokenizer))
+        format_chat_for_preference_optimisation(dataset, tokenizer)
         dataset = dataset.rename_column("text", "prompt")
     dataset = dataset.remove_columns(["labels"])
 

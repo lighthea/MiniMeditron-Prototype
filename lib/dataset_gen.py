@@ -2,20 +2,24 @@ from os.path import join, exists
 from os import listdir
 from SPARQLWrapper import SPARQLWrapper, JSON
 from unidecode import unidecode
-from tqdm import tqdm
+from typing import Tuple
+from tqdm import tqdm, trange
+from functools import cache
 
+import itertools
 import difflib
 import hashlib
-import numpy as np
 import string
+import random
 import json
 import sys
 import re
 
 WIKIDATA_ENDPOINT_URL = "https://query.wikidata.org/sparql"
-DISEASE_OUT_CACHED_FILE = join("..", "data", "knowledge_database", "query-output-cached-{}.json")
-STRUCTURED_GUIDELINES_FOLDER_PATH = join("..", "data", "knowledge_database", "guidelines", "structured_guidelines")
+DISEASE_OUT_CACHED_FILE = join(".", "data", "knowledge_database", "cached-data-{}.json")
+STRUCTURED_GUIDELINES_FOLDER_PATH = join(".", "data", "knowledge_database", "guidelines", "structured_guidelines")
 STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now', ''}
+STOP_TOKEN = { 'disease' }
 SEPARATOR = "<|>"
 
 def get_results(endpoint_url, query):
@@ -25,12 +29,12 @@ def get_results(endpoint_url, query):
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-def cache_result(query):
+def cache_result(query, fn):
     H = hashlib.sha256(query.encode("utf-8")).hexdigest()[:8]
     cache_file = DISEASE_OUT_CACHED_FILE.format(H)
     if not exists(cache_file):
         print(" [x] Running query: {}".format(H))
-        contents = get_results(WIKIDATA_ENDPOINT_URL, query)
+        contents = fn(query)
         
         with open(cache_file, 'w') as f:
             json.dump(contents, f)
@@ -40,7 +44,7 @@ def cache_result(query):
             contents = json.load(f)
     return contents
 
-def search(query):
+def search(query, dataset_index_tags, dataset_index_ids):
     xs = tokenizer(query)
     r = difflib.get_close_matches(xs, dataset_index_tags, n=5, cutoff=0.1)
 
@@ -75,14 +79,57 @@ def tokenizer(sentence):
     f3 = [x for x in f2 if not all(y in string.digits for y in x)]
     return f3
 
-def generate_dataset(dataset):
+@cache
+def metric_search(dataset, search, q_init, n_max = 8):
+    history = []
+
+    visited = set()
+    class_of = [q_init]
+    index = 0
+
+    while index < n_max and len(class_of) > 0:
+        current = class_of.pop(0)
+        visited.add(current)
+        current = dataset[current]
+        if current['name'] in STOP_TOKEN:
+            continue
+
+        print(current['name'])
+
+        class_of += [j[0] for j in [search(x) for x in current['subclass_of']] if len(j) > 0 and j[0] not in visited]
+        history.append(
+            (current['study_by'], current['health_speciality'], current['symptoms_and_signs'])
+        )
+        index += 1
+
+    return history
+
+def powerset(iterable):
+    """
+    powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)
+    """
+    xs = list(iterable)
+    # note we return an iterator rather than a list
+    return itertools.chain.from_iterable(itertools.combinations(xs,n) for n in range(len(xs)+1))
+
+def build_multiindex(dataset):
+    index = {}
+    for elem in dataset:
+        spec = dataset[elem]['health_speciality'] + dataset[elem]['study_by']
+        for comb in powerset(spec):
+            if len(list(comb)) > 0:
+                comb = tuple(sorted(comb))
+                index[comb] = index.get(comb, []) + [elem]
+    return index
+
+def setup():
     query = """SELECT DISTINCT
         ?item
         ?itemLabel
         (GROUP_CONCAT(DISTINCT ?subclass_of_label; SEPARATOR="{SEPARATOR}") AS ?subclass_of)
         (GROUP_CONCAT(DISTINCT ?study_by_label; SEPARATOR="{SEPARATOR}") AS ?study_by)
         (GROUP_CONCAT(DISTINCT ?health_speciality_label; SEPARATOR="{SEPARATOR}") AS ?health_speciality) 
-        (GROUP_CONCAT(DISTINCT ?symptoms_and_signs_label; SEPARATOR="{SEPARATOR}") AS ?symptoms_and_signs) # ?study_by
+        (GROUP_CONCAT(DISTINCT ?symptoms_and_signs_label; SEPARATOR="{SEPARATOR}") AS ?symptoms_and_signs)
     WHERE {
         ?item wdt:P31/wdt:P279* wd:Q112193867.
         OPTIONAL { ?item wdt:P279 ?subclass_of. }
@@ -115,8 +162,8 @@ def generate_dataset(dataset):
     GROUP BY ?item
     """.replace("{SEPARATOR}", SEPARATOR)
 
-    contents = cache_result(query)
-    alt_contents = cache_result(query2)
+    contents = cache_result(query, lambda q: get_results(WIKIDATA_ENDPOINT_URL, q))
+    alt_contents = cache_result(query2, lambda q: get_results(WIKIDATA_ENDPOINT_URL, q))
 
     dataset = {}
     alt_table = {}
@@ -166,16 +213,118 @@ def generate_dataset(dataset):
             with open(path, 'r') as f:
                 guidelines += list(map(json.loads, f.readlines()))
 
-    matched_guidelines = []
-    for guideline in tqdm(guidelines):
-        matched_guidelines.append(
-            dict(list(guideline.items()) + [("matched", search(guideline['label']))])
-        )
+    def compute_it(_):
+        matched_guidelines = []
+        for guideline in tqdm(guidelines):
+            matched_guidelines.append(
+                dict(list(guideline.items()) + [("matched", search(guideline['label'], dataset_index_tags, dataset_index_ids))])
+            )
+        return matched_guidelines
+    matched_guidelines = cache_result(SEPARATOR.join([g['label'] for g in guidelines] + dataset_index_ids), compute_it)
 
     A = len([x for x in matched_guidelines if x["matched"] == []])
     print("Unmatched proportion: {:.2f}% ({} elements)".format(A / len(matched_guidelines) * 100, A))
 
+    @cache
+    def search_it(query):
+        return search(query, dataset_index_tags, dataset_index_ids)
+
+    return matched_guidelines, dataset, search_it
+
+def extract_field(domains):
+    first_fields = set()
+    i = -len(domains)
+    for d in domains:
+        first_fields.update(d)
+        if len(d) >= 1:
+            i = 0
+        if i == 2:
+            break
+        i += 1
+    return list(first_fields)
+
+def proximity_heuristic(d1, dbase):
+    score = 0
+    for d in d1:
+        if d in dbase:
+            score += 1
+
+    return (score) / len(dbase)
+
+def find_matching_not_matching(dataset, multiindex, true_positive_q, ref_fields, n_max = 3):
+    ref_fields = extract_field(ref_fields)
+    scores = 0
+    elems = None
+
+    for _ in range(n_max):
+        q_init = random.choice(list(dataset.keys()))
+        fields,_ = list(zip(*metric_search(q_init)))
+        fields = extract_field(fields)
+        heuristic = proximity_heuristic(fields, ref_fields)
+
+        if (heuristic < scores or elems is None) and q_init != true_positive_q:
+            elems = q_init
+            scores = heuristic
+
+    # Generate the powerset
+    field_powerset = list(powerset(ref_fields))
+
+    while True:
+        elem = random.choice(field_powerset)
+        if len(elem) == 0:
+            continue
+
+        n_q = random.choice(multiindex[tuple(sorted(elem))])
+        return elems, n_q
+
+def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], list[str], list[str]]:
+    # Extract guidelines and dataset
+    guidelines, dataset, search = setup()
+    multiindex = build_multiindex(dataset)
+
+    # Match each Q... to a list of labels
+    @cache
+    def q_value_to_labels(q_value):
+        dataset[q_value]['name'] + dataset[q_value]['alt']
+
+    def q_value_to_random_label(q_value):
+        # Cannot cache that badboi, non deterministic
+        return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
+
     # Generate dataset
     N = 10
+    accepted = []
+    rejected = []
+    text = []
+    kernel_set = set([i['label'] for i in guidelines if i["matched"] == []])
+
+    for _ in trange(N):
+        # Pick an element at random
+        rand_id = random.randint(0, len(labels))
+
+        # Extract the Condition
+        rand_elem = json.loads(labels[rand_id])["Condition"]
+
+        # If the elem is part of the null set then fallback to accurracy metric
+        text.append(queries[rand_id])
+
+        if rand_elem in kernel_set:
+            accepted.append(rand_elem)
+
+            rej = random.choice(labels)
+            while json.loads(rej)["Condition"] != rand_elem:
+                rej = random.choice(labels)
+            rejected.append(rej)
+        
+        else:
+            # Pick a disease
+            q_init = [guideline["matched"] for guideline in guidelines if guideline["label"].lower() == rand_elem.lower()][0][0]
+
+            # Check the history
+            domains,_ = list(zip(*metric_search(dataset, search, q_init, n=8)))
+            q_min, q_max = find_matching_not_matching(dataset, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
+
+            accepted.append(q_value_to_random_label(q_max))
+            rejected.append(q_value_to_random_label(q_min))
     
-    
+    return text, accepted, rejected

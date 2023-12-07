@@ -22,3 +22,5 @@ dataclasses
 tqdm
 pycryptodome
 scikit-learn
+SPARQLWrapper
+unidecode
