@@ -305,24 +305,24 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
     for _ in trange(N):
         # Pick an element at random
         rand_id = random.randint(0, len(labels))
+        elem_json = repair_json(labels[rand_id])
 
         # Extract the Condition
         try:
-            rand_elem = json.loads(repair_json(labels[rand_id]))["Condition"]
-        except json.decoder.JSONDecodeError:
-            print('Invalid Json at index {}, SKIPPING'.format(rand_id))
+            rand_elem = json.loads(elem_json)["Condition"]
+        except ValueError as e:
+            print('Invalid Json at index {}, ({})\nSelected resolving strategy: Skipping (close your eyes to stop seeing the issue)'.format(rand_id, elem_json))
             continue
 
-        # If the elem is part of the null set then fallback to accurracy metric
-        text.append(queries[rand_id])
-
         if rand_elem in kernel_set:
-            accepted.append(rand_elem)
-
+            
             rej = random.choice(labels)
-            while json.loads(rej)["Condition"] != rand_elem:
+            while rej != elem_json:
                 rej = random.choice(labels)
+
             rejected.append(rej)
+            accepted.append(elem_json)
+            text.append(queries[rand_id])
         
         else:
             # Pick a disease
@@ -332,7 +332,10 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             domains,_ = list(zip(*metric_search(dataset, search, q_init)))
             q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
 
-            accepted.append(q_value_to_random_label(q_max))
-            rejected.append(q_value_to_random_label(q_min))
-    
+            if q_value_to_random_label(q_min) != elem_json:
+                text.append(queries[rand_id])
+                accepted.append(q_value_to_random_label(q_max))
+                rejected.append(q_value_to_random_label(q_min))
+
+    print('Generated length: {}'.format(len(text)))
     return text, accepted, rejected
