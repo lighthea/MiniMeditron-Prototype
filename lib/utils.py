@@ -71,6 +71,7 @@ def retrieve_prompt(file: str) -> str:
 def repair_json(json_string):
     # Pattern to identify key-value pairs where value is unquoted
     pattern = r'(?<=:)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(,|\})'
+    pattern2 = r'"[^\"\n:]*("[^\"\n:]+)+"'
 
     # Function to replace unquoted values with quoted ones
     def replace_with_quotes(match):
@@ -82,6 +83,8 @@ def repair_json(json_string):
 
     # Use regular expression to replace unquoted values
     json_string = re.sub(pattern, replace_with_quotes, json_string)
-    repaired_json_string = re.sub(r',\s*([\]}])', r'\1', json_string)
-    return (repaired_json_string.replace("'s", "s")
-            .replace("'", '"'))
+
+    # Remove trailing additional ',' : like { "hello": "invalid json", }
+    repaired_json_string = repaired_json_string.replace("'s", "s").replace("'", '"')
+    repaired_json_string = re.sub(pattern2, lambda match: '"' + '\"'.join(match.split('"')[1:-1]) + '"', json_string) 
+    return repaired_json_string
