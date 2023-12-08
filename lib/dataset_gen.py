@@ -5,6 +5,8 @@ from unidecode import unidecode
 from typing import Tuple
 from tqdm import tqdm, trange
 from functools import cache
+from datasets import Dataset
+from .utils import repair_json
 
 import itertools
 import difflib
@@ -79,9 +81,8 @@ def tokenizer(sentence):
     f3 = [x for x in f2 if not all(y in string.digits for y in x)]
     return f3
 
-@cache
-def metric_search(dataset, search, q_init, n_max = 8):
-    history = []
+def metric_search(dataset, search, q_init, n_max = 4):
+    history = [([],[])]
 
     visited = set()
     class_of = [q_init]
@@ -94,11 +95,9 @@ def metric_search(dataset, search, q_init, n_max = 8):
         if current['name'] in STOP_TOKEN:
             continue
 
-        print(current['name'])
-
         class_of += [j[0] for j in [search(x) for x in current['subclass_of']] if len(j) > 0 and j[0] not in visited]
         history.append(
-            (current['study_by'], current['health_speciality'], current['symptoms_and_signs'])
+            (current['study_by'] + current['health_speciality'], current['symptoms_and_signs'])
         )
         index += 1
 
@@ -244,6 +243,9 @@ def extract_field(domains):
     return list(first_fields)
 
 def proximity_heuristic(d1, dbase):
+    if len(dbase) == 0:
+        return 0
+
     score = 0
     for d in d1:
         if d in dbase:
@@ -251,14 +253,14 @@ def proximity_heuristic(d1, dbase):
 
     return (score) / len(dbase)
 
-def find_matching_not_matching(dataset, multiindex, true_positive_q, ref_fields, n_max = 3):
+def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 3):
     ref_fields = extract_field(ref_fields)
     scores = 0
     elems = None
 
     for _ in range(n_max):
         q_init = random.choice(list(dataset.keys()))
-        fields,_ = list(zip(*metric_search(q_init)))
+        fields,_ = list(zip(*metric_search(dataset, search, q_init)))
         fields = extract_field(fields)
         heuristic = proximity_heuristic(fields, ref_fields)
 
@@ -273,9 +275,11 @@ def find_matching_not_matching(dataset, multiindex, true_positive_q, ref_fields,
         elem = random.choice(field_powerset)
         if len(elem) == 0:
             continue
-
-        n_q = random.choice(multiindex[tuple(sorted(elem))])
-        return elems, n_q
+        elem = tuple(sorted(elem))
+        
+        if elem in multiindex:
+            n_q = random.choice(multiindex[elem])
+            return elems, n_q
 
 def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], list[str], list[str]]:
     # Extract guidelines and dataset
@@ -285,14 +289,14 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
     # Match each Q... to a list of labels
     @cache
     def q_value_to_labels(q_value):
-        dataset[q_value]['name'] + dataset[q_value]['alt']
+        return [dataset[q_value]['name']] + dataset[q_value]['alt']
 
     def q_value_to_random_label(q_value):
         # Cannot cache that badboi, non deterministic
         return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
 
     # Generate dataset
-    N = 10
+    N = 100
     accepted = []
     rejected = []
     text = []
@@ -303,7 +307,11 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         rand_id = random.randint(0, len(labels))
 
         # Extract the Condition
-        rand_elem = json.loads(labels[rand_id])["Condition"]
+        try:
+            rand_elem = json.loads(repair_json(labels[rand_id]))["Condition"]
+        except Exception as e:
+            print('Invalid Json at index {}, SKIPPING'.format(rand_id))
+            continue
 
         # If the elem is part of the null set then fallback to accurracy metric
         text.append(queries[rand_id])
@@ -321,8 +329,8 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             q_init = [guideline["matched"] for guideline in guidelines if guideline["label"].lower() == rand_elem.lower()][0][0]
 
             # Check the history
-            domains,_ = list(zip(*metric_search(dataset, search, q_init, n=8)))
-            q_min, q_max = find_matching_not_matching(dataset, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
+            domains,_ = list(zip(*metric_search(dataset, search, q_init)))
+            q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
 
             accepted.append(q_value_to_random_label(q_max))
             rejected.append(q_value_to_random_label(q_min))

@@ -4,8 +4,8 @@ requests==2.28.2
 scikit-learn
 packaging
 ninja
-transformers @ git+https://github.com/huggingface/transformers.git@main
-peft
+transformers==4.35.2
+peft==0.6.0
 trl[peft]@git+https://github.com/huggingface/trl.git@main
 bitsandbytes
 rank_bm25

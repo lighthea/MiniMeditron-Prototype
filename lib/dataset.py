@@ -143,9 +143,11 @@ def format_chat_for_preference_optimisation(dataset: Dataset, tokenizer):
         tokenized_accepted.append(tokenized_output_right)
         tokenized_rejected.append(tokenized_output_wrong)
     
-    dataset["text"] = text
-    dataset["rejected"] = tokenized_rejected
-    dataset["accepted"] = tokenized_accepted
+    return Dataset.from_dict({
+        "text": text,
+        "chosen": tokenized_accepted,
+        "rejected": tokenized_rejected
+    })
 
 def save_dataset(dataset: Dataset, config: dict):
     """
@@ -190,9 +192,10 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
-        format_chat_for_preference_optimisation(dataset, tokenizer)
+        dataset = format_chat_for_preference_optimisation(dataset, tokenizer)
         dataset = dataset.rename_column("text", "prompt")
-    dataset = dataset.remove_columns(["labels"])
+    else:
+        dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
         if config["dataset_generation"].get("padding_side") is not None:
