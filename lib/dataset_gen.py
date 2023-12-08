@@ -296,7 +296,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
 
     # Generate dataset
-    N = 100
+    N = 2000
     accepted = []
     rejected = []
     text = []
