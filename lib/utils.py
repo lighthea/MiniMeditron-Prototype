@@ -85,6 +85,7 @@ def repair_json(json_string):
     json_string = re.sub(pattern, replace_with_quotes, json_string)
 
     # Remove trailing additional ',' : like { "hello": "invalid json", }
-    repaired_json_string = repaired_json_string.replace("'s", "s").replace("'", '"')
+    repaired_json_string = re.sub(r',\s*([\]}])', r'\1', json_string)
+    repaired_json_string = json_string.replace("'s", "s").replace("'", '"')
     repaired_json_string = re.sub(pattern2, lambda match: '"' + '\"'.join(match.split('"')[1:-1]) + '"', json_string) 
     return repaired_json_string
