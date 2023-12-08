@@ -309,7 +309,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         # Extract the Condition
         try:
             rand_elem = json.loads(repair_json(labels[rand_id]))["Condition"]
-        except Exception as e:
+        except json.decoder.JSONDecodeError:
             print('Invalid Json at index {}, SKIPPING'.format(rand_id))
             continue
 
