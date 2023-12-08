@@ -254,7 +254,6 @@ def proximity_heuristic(d1, dbase):
     return (score) / len(dbase)
 
 def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 3):
-    ref_fields = extract_field(ref_fields)
     scores = 0
     elems = None
 
@@ -296,7 +295,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
 
     # Generate dataset
-    N = 2000
+    N = 500
     accepted = []
     rejected = []
     text = []
@@ -315,7 +314,6 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             continue
 
         if rand_elem in kernel_set:
-            
             rej = random.choice(labels)
             while rej != elem_json:
                 rej = random.choice(labels)
@@ -330,12 +328,23 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
 
             # Check the history
             domains,_ = list(zip(*metric_search(dataset, search, q_init)))
-            q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
+            domains = extract_field(domains)
+            if len(domains) <= 1: # Partially fixes the halting problem
+                rej = random.choice(labels)
+                while rej != elem_json:
+                    rej = random.choice(labels)
 
-            if q_value_to_random_label(q_min) != elem_json:
+                rejected.append(rej)
+                accepted.append(elem_json)
                 text.append(queries[rand_id])
-                accepted.append(q_value_to_random_label(q_max))
-                rejected.append(q_value_to_random_label(q_min))
+
+            else:
+                q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
+
+                if q_value_to_random_label(q_min) != elem_json:
+                    text.append(queries[rand_id])
+                    accepted.append(q_value_to_random_label(q_max))
+                    rejected.append(q_value_to_random_label(q_min))
 
     print('Generated length: {}'.format(len(text)))
     return text, accepted, rejected
