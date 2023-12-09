@@ -295,7 +295,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
 
     # Generate dataset
-    N = 500
+    N = 8000
     accepted = []
     rejected = []
     text = []
@@ -329,14 +329,9 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             # Check the history
             domains,_ = list(zip(*metric_search(dataset, search, q_init)))
             domains = extract_field(domains)
-            if len(domains) <= 1: # Partially fixes the halting problem
-                rej = random.choice(labels)
-                while rej != elem_json:
-                    rej = random.choice(labels)
-
-                rejected.append(rej)
-                accepted.append(elem_json)
-                text.append(queries[rand_id])
+            if len(domains) == 0: # Partially fixes the halting problem
+                kernel_set.add(rand_elem)
+                continue
 
             else:
                 q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
