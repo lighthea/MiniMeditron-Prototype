@@ -253,7 +253,7 @@ def proximity_heuristic(d1, dbase):
 
     return (score) / len(dbase)
 
-def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 3):
+def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 5):
     scores = 0
     elems = None
 
@@ -315,7 +315,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
 
         if rand_elem in kernel_set:
             rej = random.choice(labels)
-            while rej != elem_json:
+            while rej == elem_json:
                 rej = random.choice(labels)
 
             rejected.append(rej)
@@ -331,7 +331,13 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             domains = extract_field(domains)
             if len(domains) == 0: # Partially fixes the halting problem
                 kernel_set.add(rand_elem)
-                continue
+                rej = random.choice(labels)
+                while rej == elem_json:
+                    rej = random.choice(labels)
+
+                rejected.append(rej)
+                accepted.append(elem_json)
+                text.append(queries[rand_id])
 
             else:
                 q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
