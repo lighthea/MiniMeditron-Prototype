@@ -13,7 +13,7 @@
     },
 
     "model_folders" : {
-        "tokenized_data_path": "data/embeddings/dpo_cos",
+        "tokenized_data_path": "data/embeddings/dpo_cos_upsample",
         "output_dir": "data/exports/finetuned_models/model2_po",
         "save_path": "data/exports/finetuned_models/model2_po/checkpoints"
     },
@@ -55,7 +55,7 @@
     "dpo_parameters" : {
         "embedding" : "sentence_transformer",
         "similarity" : "cos",
-        "upsample" : true
+        "upsample" : 5000
     },
 
     "peft_parameters" : {

@@ -2,7 +2,7 @@ import json
 import os
 import random
 
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, concatenate_datasets
 from tqdm import tqdm
 
 from lib.tf_idf import batch_bm25
@@ -13,6 +13,8 @@ from cos_sim import *
 
 import pandas as pd
 import json
+
+import random
 
 def blanket(config: dict) -> str:
     file = config["general_settings"]['process_file']
@@ -182,11 +184,28 @@ def fill_with_embeddings(config: dict, dataset: Dataset):
             return insert_semantic_embeddings(dataset)
 
 
-def upsample_preferences(config: dict, dataset: Dataset, preference_fun, n=5000):
-    if not config["dpo_parameters"]["upsample"]:
+def upsample_preferences(config: dict, dataset: Dataset, preference_fun, tokenizer):
+    if config["dpo_parameters"]["upsample"] <= 0:
         return dataset
     
-    upsampled = dataset.shuffle
+    upsampled_id = random.choices(range(dataset.shape[0]), k=config["dpo_parameters"]["upsample"])
+
+    upsampled = dataset.select(upsampled_id)
+
+    upsampled = upsampled.map(lambda x : preference_fun(config, x, dataset, tokenizer))
+    dataset = concatenate_datasets([dataset, upsampled])
+
+    return dataset
+
+
+def generate_preference_based_dataset(config: dict, dataset: Dataset, tokenizer):
+    dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(config, x, dataset, tokenizer))
+
+    if "upsample" in config["dpo_parameters"]:
+        dataset = upsample_preferences(config, dataset, format_chat_for_preference_optimisation, tokenizer)
+
+    return dataset
+
 
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
@@ -216,7 +235,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # If the model is preference based, format the chat for the preference optimisation task
     if config["general_settings"]["task"] == "po":
-        dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(config, x, dataset, tokenizer))
+        dataset = generate_preference_based_dataset(config, dataset, tokenizer)
         dataset = dataset.rename_column("text", "prompt")
 
     dataset = dataset.remove_columns(["labels"])
