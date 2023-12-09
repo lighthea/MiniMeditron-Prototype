@@ -303,7 +303,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
 
     for _ in trange(N):
         # Pick an element at random
-        rand_id = random.randint(0, len(labels))
+        rand_id = random.randint(0, len(labels) - 1)
         elem_json = repair_json(labels[rand_id])
 
         # Extract the Condition
