@@ -182,6 +182,12 @@ def fill_with_embeddings(config: dict, dataset: Dataset):
             return insert_semantic_embeddings(dataset)
 
 
+def upsample_preferences(config: dict, dataset: Dataset, preference_fun, n=5000):
+    if not config["dpo_parameters"]["upsample"]:
+        return dataset
+    
+    upsampled = dataset.shuffle
+
 def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
     Load the dataset from the disk or create it if it doesn't exist

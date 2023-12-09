@@ -6,7 +6,7 @@ import json
 def parse_guideline(text):
     json_obj = json.load(text)
     
-    for symptom in json_obj[] 
+    for symptom in json_obj
 
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
