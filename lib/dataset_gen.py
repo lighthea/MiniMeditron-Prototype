@@ -295,7 +295,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
         return '{"Condition": "TODO"}'.replace("TODO", random.choice(q_value_to_labels(q_value)).replace("\\", "\\\\").replace('"', '\\"'))
 
     # Generate dataset
-    N = 8000
+    N = 6000
     accepted = []
     rejected = []
     text = []
@@ -315,8 +315,10 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
 
         if rand_elem in kernel_set:
             rej = random.choice(labels)
+            rej = repair_json(rej)
             while rej == elem_json:
                 rej = random.choice(labels)
+                rej = repair_json(rej)
 
             rejected.append(rej)
             accepted.append(elem_json)
@@ -332,8 +334,10 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             if len(domains) == 0: # Partially fixes the halting problem
                 kernel_set.add(rand_elem)
                 rej = random.choice(labels)
+                rej = repair_json(rej)
                 while rej == elem_json:
                     rej = random.choice(labels)
+                    rej = repair_json(rej)
 
                 rejected.append(rej)
                 accepted.append(elem_json)
@@ -346,6 +350,17 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
                     text.append(queries[rand_id])
                     accepted.append(q_value_to_random_label(q_max))
                     rejected.append(q_value_to_random_label(q_min))
+
+    for idx in trange(labels * 2):
+        elem_json = labels[idx % len(labels)]
+
+        rej = random.choice(labels)
+        while rej == elem_json:
+            rej = random.choice(labels)
+
+        accepted.append(elem_json)
+        rejected.append(rej)
+        text.append(queries[idx % len(labels)])
 
     print('Generated length: {}'.format(len(text)))
     return text, accepted, rejected
