@@ -351,7 +351,7 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
                     accepted.append(q_value_to_random_label(q_max))
                     rejected.append(q_value_to_random_label(q_min))
 
-    for idx in trange(labels * 2):
+    for idx in trange(len(labels) * 2):
         elem_json = labels[idx % len(labels)]
 
         rej = random.choice(labels)
