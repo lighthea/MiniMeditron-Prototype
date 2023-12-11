@@ -235,7 +235,6 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)
-    dataset = dataset.select(range(3))
 
     # Insert potential embedding
     dataset = fill_with_embeddings(config, dataset)

@@ -55,7 +55,7 @@
     "dpo_parameters" : {
         "embedding" : "sentence_transformer",
         "similarity" : "cos",
-        "upsample" : 5000
+        "upsample" : 10000
     },
 
     "peft_parameters" : {
