@@ -209,10 +209,8 @@ def generate_preference_based_dataset(config: dict, dataset: Dataset, tokenizer)
         match config["dpo_parameters"]["similarity"]:
             case "cos":
                 preference_fun = cos_sim_based_pref
-                break
             case _ :
                 preference_fun = cos_sim_based_pref
-                break
 
         dataset = upsample_preferences(config, dataset, preference_fun, tokenizer)
 
