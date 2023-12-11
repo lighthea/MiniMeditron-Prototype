@@ -16,6 +16,27 @@ def insert_semantic_embeddings(dataset: Dataset, col_name="embeddings"):
         col_name : model.encode(x["labels"])
         })
 
+
+def cos_sim_based_pref(example, choice1, choice2, tokenizer):
+    score1 = util.cos_sim(example["embeddings"], choice1["embeddings"])
+    score2 = util.cos_sim(example["embeddings"], choice2["embeddings"])
+
+    chosen = choice1 if score1 > score2 else choice2 
+    rejected = choice2 if score1 > score2 else choice1
+
+    chat_template_wrong = [{"role": "assistant",
+                            "content": rejected["labels"]}]
+    chat_template_right = [{"role": "assistant",
+                            "content": chosen["labels"]}]
+
+    tokenized_output_wrong = tokenizer.apply_chat_template(chat_template_wrong, tokenize=False,
+                                                           add_generation_prompt=False)
+    tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False,
+                                                           add_generation_prompt=False)
+
+    return {"rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
+
+
 def cos_sim_based_pair(example, dataset: Dataset, tokenizer):
     iterable_dataset = dataset.to_iterable_dataset()
 

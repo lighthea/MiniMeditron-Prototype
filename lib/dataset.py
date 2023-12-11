@@ -188,11 +188,15 @@ def upsample_preferences(config: dict, dataset: Dataset, preference_fun, tokeniz
     if config["dpo_parameters"]["upsample"] <= 0:
         return dataset
     
-    upsampled_id = random.choices(range(dataset.shape[0]), k=config["dpo_parameters"]["upsample"])
+    examples_id = random.choices(range(dataset.shape[0]), k=config["dpo_parameters"]["upsample"])
+    choices1_id = random.choices(range(dataset.shape[0]), k=config["dpo_parameters"]["upsample"])
+    choices2_id = random.choices(range(dataset.shape[0]), k=config["dpo_parameters"]["upsample"])
 
-    upsampled = dataset.select(upsampled_id)
+    examples = dataset.select(examples_id)
+    choices1 = dataset.select(choices1_id)
+    choices2 = dataset.select(choices2_id)
 
-    upsampled = upsampled.map(lambda x : preference_fun(config, x, dataset, tokenizer))
+    upsampled = zip(examples, choices1, choices2).map(lambda e, a, b : preference_fun(e, a, b, tokenizer))
     dataset = concatenate_datasets([dataset, upsampled])
 
     return dataset
@@ -202,7 +206,15 @@ def generate_preference_based_dataset(config: dict, dataset: Dataset, tokenizer)
     dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(config, x, dataset, tokenizer))
 
     if "upsample" in config["dpo_parameters"]:
-        dataset = upsample_preferences(config, dataset, format_chat_for_preference_optimisation, tokenizer)
+        match config["dpo_parameters"]["similarity"]:
+            case "cos":
+                preference_fun = cos_sim_based_pref
+                break
+            case _ :
+                preference_fun = cos_sim_based_pref
+                break
+
+        dataset = upsample_preferences(config, dataset, preference_fun, tokenizer)
 
     return dataset
 
