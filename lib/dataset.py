@@ -196,8 +196,11 @@ def upsample_preferences(config: dict, dataset: Dataset, preference_fun, tokeniz
     choices1 = dataset.select(choices1_id)
     choices2 = dataset.select(choices2_id)
 
-    upsampled = zip(examples, choices1, choices2).map(lambda e, a, b : preference_fun(e, a, b, tokenizer))
-    dataset = concatenate_datasets([dataset, upsampled])
+    # upsampled = zip(examples, choices1, choices2).map(lambda e, a, b : preference_fun(e, a, b, tokenizer))
+    # dataset = concatenate_datasets([dataset, upsampled])
+
+    for e, a, b in tqdm(list(zip(examples, choices1, choices2))):
+        dataset = dataset.add_item(preference_fun(e, a, b, tokenizer))
 
     return dataset
 
@@ -232,6 +235,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)
+    dataset = dataset.select(range(3))
 
     # Insert potential embedding
     dataset = fill_with_embeddings(config, dataset)
