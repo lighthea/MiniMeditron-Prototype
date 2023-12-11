@@ -34,7 +34,7 @@ def cos_sim_based_pref(example, choice1, choice2, tokenizer):
     tokenized_output_right = tokenizer.apply_chat_template(chat_template_right, tokenize=False,
                                                            add_generation_prompt=False)
 
-    return {"prompt" : example["text"], "rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
+    return {"text" : example["text"], "rejected": tokenized_output_wrong, "chosen": tokenized_output_right}
 
 
 def cos_sim_based_pair(example, dataset: Dataset, tokenizer):
