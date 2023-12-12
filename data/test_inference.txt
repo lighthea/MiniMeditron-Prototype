@@ -1,0 +1,58 @@
+<|user|>
+Strictly fill this form (without additional information) :
+ {
+  "Condition": ""
+  }
+ by diagnosing the potential conditions for this patient : 
+ "{
+    "symptoms": [
+        {
+            "name of the symptom": "persistent urinary incontinence",
+            "intensity of symptom": "7/10",
+            "specific attributes of the symptom": {
+                "location": "urinary system",
+                "Quality of": "leakage of urine",
+                "temporalisation": "persistent"
+            },
+            "When did the symptom appear": "",
+            "previous treatments": "",
+            "reaction to previous treatments": "",
+            "behaviour affecting the symptom": "unknown"
+        },
+        {
+            "name of the symptom": "progressive erectile dysfunction",
+            "intensity of symptom": "",
+            "specific attributes of the symptom": {
+                "location": "genital area",
+                "Quality of": "difficulty achieving or maintaining erection",
+                "temporalisation": "progressive"
+            },
+            "When did the symptom appear": "",
+            "previous treatments": "",
+            "reaction to previous treatments": "",
+            "behaviour affecting the symptom": "unknown"
+        }
+    ],
+    "socio economic context": {},
+    "geographic_context": {
+        "location": "",
+        "recent travels": "",
+        "level of care": ""
+    },
+    "physiological context": {},
+    "psychological context": {},
+    "personal medical_history": {},
+    "family medical_history": {
+        "prostate cancer": "present in family history"
+    },
+    "current medication": {},
+    "lifestyle factors": {},
+    "results of recent medical tests": {
+        "PSA levels": "showing consistent increase over the past year",
+        "digital rectal exam": "revealed palpable abnormalities"
+    }
+}"
+ you can use the following guidelines : 
+ {"Condition": "Prostate Cancer", "Symptoms list": ["Urinary incontinence", "Erectile dysfunction"], "Contextual info": {"Factors affecting diagnostic": ["Age", "Race", "Family history of prostate cancer", "PSA level", "Digital Rectal Exam results"]}}}
+
+<|assistant|>
