@@ -155,8 +155,9 @@ def save_dataset(dataset: Dataset, config: dict):
     :param dataset: the dataset
     :param config: the configuration file
     """
-    dataset = dataset.shuffle()
-    dataset = dataset.train_test_split(test_size=config["dataset_generation"]["test_size"], shuffle=True)
+    # Seeded in order to ensure no leakage of the test of the dataset during the training epochs
+    dataset = dataset.shuffle(seed=42)
+    dataset = dataset.train_test_split(test_size=config["dataset_generation"]["test_size"], shuffle=True, seed=42) 
 
     # Create the folder if it doesn't exist
     if not os.path.exists(config["model_folders"]['tokenized_data_path']):
@@ -176,9 +177,9 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     """
 
     # Load the tokenized dataset if it exists
-    # dataset = load_pretrained_dataset(config)
-    # if dataset is not None:
-    #     return dataset
+    dataset = load_pretrained_dataset(config)
+    if dataset is not None:
+        return dataset
 
     # Construct the raw dataset
     dataset = construct_raw_dataset(config)

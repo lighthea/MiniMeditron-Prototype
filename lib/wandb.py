@@ -71,9 +71,13 @@ def retrieve_checkpoint(config: dict) -> str | None:
     baseline = config["wandb_parameters"]["baseline_name"]
     if not ":" in baseline:
         baseline += ":latest"
+    
+    # Backward compatibility:
+    if not (baseline.startswith("model-") or baseline.startswith("checkpoint-")):
+        baseline = "model-" + baseline
 
     run = wandb.init(entity="alexs-team", config={ "init_ia3_weights": False }, project=config["wandb_parameters"]["wandb_project"], name=config["wandb_parameters"]["run_name"], resume="allow")
-    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/model-{baseline}',
+    artifact = run.use_artifact(f'alexs-team/minimed-finetune-proto0/{baseline}',
                                 type='model')
     artifact_dir = artifact.download(config["wandb_parameters"]["wandb_folder"])
     return artifact_dir

@@ -1,0 +1,68 @@
+{
+    "general_settings" : {
+        "process_file": "data/structure/pipelines/pipeline_2.json",
+        "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
+        "task": "po",
+        "use_flash_attn": false
+    },
+
+    "general_folders" : {
+        "guidelines_folder": "data/knowledge_database/guidelines/structured_guidelines",
+        "train_folder": "data/knowledge_database/generated_patients/structured_patients",
+        "base_folder": "data/structure/guidelines"
+    },
+
+    "model_folders" : {
+        "tokenized_data_path": "data/exports/dataset/model2_po/processed",
+        "output_dir": "data/exports/finetuned_models/model2_po",
+        "save_path": "data/exports/finetuned_models/model2_po/checkpoints"
+    },
+
+    "dataset_generation" : {
+        "force_retokenize": false,
+        "n_context_guidelines": 3,
+        "with_token": true,
+        "with_output": true,
+        "test_size": 0.1
+    },
+
+    "model_parameters" : {
+        "num_train_epochs": 2,
+        "per_device_train_batch_size": 1,
+        "per_device_eval_batch_size": 1,
+        "eval_steps" : 25,
+        "save_steps": 200,
+        "logging_steps": 10,
+        "learning_rate": 2e-6,
+        "max_steps": 2000,
+        "neftune_noise_alpha": 5,
+        "eval_accumulation_steps": 1,
+        "remove_unused_columns": false,
+        "gradient_checkpointing": true,
+        "gradient_accumulation_steps": 2,
+        "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
+    },
+
+    "wandb_parameters" : {
+        "start_from_checkpoint": true,
+        "baseline_name" : "checkpoint-model2-ipo-guillaume:v12",
+        "run_name": "model2-ipo-guillaume-eval",
+        "wandb_key": "ENCRYPTED{zjjRnC5U+RL2tKi4kTdRvQ==;taEY67h8tVqQAKLdYTlIX7jJIF2DwWa21pB8M6R59lP7um7dDyHhUw==;OloZJTpIFF9in2gkW6hBkQ==}",
+        "wandb_project": "minimed-finetune-proto0",
+        "wandb_folder": "data/exports/wandb"
+    },
+
+    "peft_parameters" : {
+        "target_modules" : [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+            "lm_head"
+        ],
+        "reinit_weights" : false
+    }
+}
