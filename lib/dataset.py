@@ -196,7 +196,8 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
         dataset = format_chat_for_preference_optimisation(dataset, tokenizer)
         dataset = dataset.rename_column("text", "prompt")
     else:
-        dataset = dataset.remove_columns(["labels"])
+        if not "keep_labels" in config or config["keep_labels"] == False:
+            dataset = dataset.remove_columns(["labels"])
 
     def tokenize(example):
         if config["dataset_generation"].get("padding_side") is not None:
