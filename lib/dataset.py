@@ -131,6 +131,7 @@ def format_chat_for_qa(example, config, tokenizer):
 def format_chat_for_preference_optimisation(dataset: Dataset, tokenizer):
     # select a wrong label
     text, accepted, rejected = generate_dataset(dataset["labels"], dataset["text"])
+    text = [txt.split("\n<|assistant|>")[0] for txt in text]
     tokenized_accepted, tokenized_rejected = [], []
 
     for elem_accepted, elem_rejected in zip(accepted, rejected):
