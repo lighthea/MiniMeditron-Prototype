@@ -40,6 +40,7 @@ def main():
                                                      use_flash_attention_2=config["general_settings"]["use_flash_attn"],
                                                      device_map={"": Accelerator().process_index})
         tokenizer = AutoTokenizer.from_pretrained(config["chekpoint_folder"], add_eos_token=True)
+        tokenizer.padding_side = 'left'
     else:
         model = AutoModelForCausalLM.from_pretrained(config["general_settings"]['base_model_id'],
                                                      quantization_config=bnb_config,
@@ -50,6 +51,7 @@ def main():
         # Initialize the tokenizer
         tokenizer = AutoTokenizer.from_pretrained(config["general_settings"]['base_model_id'], add_eos_token=True)
         tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = 'left'
     
     # Load the dataset
     dataset = load_dataset(config, tokenizer)
