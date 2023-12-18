@@ -24,14 +24,37 @@ STOP_WORDS = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you'
 STOP_TOKEN = { 'disease' }
 SEPARATOR = "<|>"
 
-def get_results(endpoint_url, query):
+def powerset(iterable):
+    '''
+        Compute the powerset of an iterable (cf. [1, 2, 3] -> [[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]])
+    Args:
+        iterable (iterable): The iterable to compute the powerset of
+    '''
+    xs = list(iterable)
+    # note we return an iterator rather than a list
+    return itertools.chain.from_iterable(itertools.combinations(xs,n) for n in range(len(xs)+1))
+
+def query_wikidata(endpoint_url, query):
+    '''
+        Query the wikidata endpoint
+    Args:
+        endpoint_url (str): The endpoint url
+        query (str): The query to run
+    '''
     user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
     sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
     sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-def cache_result(query, fn):
+def query_cache_fn(query, fn):
+    '''
+        Run the function fn on the query and cache the result in a file, reusing the result if the file exists
+
+    Args:
+        query (str): The query to run
+        fn (function): The function to run on the query
+    '''
     H = hashlib.sha256(query.encode("utf-8")).hexdigest()[:8]
     cache_file = DISEASE_OUT_CACHED_FILE.format(H)
     if not exists(cache_file):
@@ -47,21 +70,41 @@ def cache_result(query, fn):
     return contents
 
 def search(query, dataset_index_tags, dataset_index_ids):
-    xs = tokenizer(query)
+    xs = tokenize(query)
     r = difflib.get_close_matches(xs, dataset_index_tags, n=5, cutoff=0.1)
 
     # The version bellow ensure that keys stays order
     return list(dict.fromkeys([dataset_index_ids[dataset_index_tags.index(r)] for r in r]).keys())
 
-def map_list(it, fn):
+def map_to_list(it, fn):
+    '''
+        A variant of the map function that returns a list instead of an iterator
+    Args:
+        it (iterable): The iterable to map
+        fn (function): The function to map
+    '''
     return [i for i in map(fn, it) if i is not None]
 
 def map_if(val, fn):
+    '''
+        A variant of the map function that returns None if the value is None
+    Args:
+        val (any): The value to map
+        fn (function): The function to map
+    '''
     if val is None:
         return None
     return fn(val)
 
-def retrieve(object_, key, default):
+def get_recurse(object_, key, default):
+    '''
+        Retrieve a key from a nested object
+    Example: get_recurse(object, "this/is/a/path", None) -> 1
+    Args:
+        object_ (dict): The object to retrieve the key from
+        key (str): The key to retrieve
+        default (any): The default value to return if the key is not found
+    '''
     keys = key.split('/')
     for key in keys:
         object_ = object_.get(key, None)
@@ -69,19 +112,27 @@ def retrieve(object_, key, default):
             return default
     return object_
 
-def partial_lowercase(word):
-    if all(x in string.ascii_uppercase + string.digits + '-' for x in word):
-        return word
-    return word.lower()
-
-def tokenizer(sentence):
+def tokenize(sentence):
+    '''
+        Tokenize a sentence
+    Args:
+        sentence (str): The sentence to tokenize
+    '''
     sentence = unidecode(sentence)
     f1 = [x.group().lower() for x in re.finditer(r'[a-zA-Z0-9\-]+', sentence)]
     f2 = [x for x in f1 if not x in STOP_WORDS]
     f3 = [x for x in f2 if not all(y in string.digits for y in x)]
     return f3
 
-def metric_search(dataset, search, q_init, n_max = 4):
+def construct_classication(dataset, search, q_init, n_max = 4):
+    '''
+        Construct a classification from a query
+    Args:
+        dataset (dict): The dataset
+        search (function): The search function to extract the related elements from Qid
+        q_init (str): The initial query where to start exploring
+        n_max (int): The maximum number of elements to retrieve
+    '''
     history = [([],[])]
 
     visited = set()
@@ -103,15 +154,14 @@ def metric_search(dataset, search, q_init, n_max = 4):
 
     return history
 
-def powerset(iterable):
-    """
-    powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)
-    """
-    xs = list(iterable)
-    # note we return an iterator rather than a list
-    return itertools.chain.from_iterable(itertools.combinations(xs,n) for n in range(len(xs)+1))
 
-def build_multiindex(dataset):
+def build_speciality_multiindex(dataset):
+    '''
+        Build a multiindex for a tuple of specialities (health_speciality, study_by) to a list of ids
+    
+    Args:
+        dataset (dict): The dataset
+    '''
     index = {}
     for elem in dataset:
         spec = dataset[elem]['health_speciality'] + dataset[elem]['study_by']
@@ -121,7 +171,11 @@ def build_multiindex(dataset):
                 index[comb] = index.get(comb, []) + [elem]
     return index
 
-def setup():
+def download_dataset():
+    '''
+        Download the dataset from wikidata and collect the guidelines
+    '''
+
     query = """SELECT DISTINCT
         ?item
         ?itemLabel
@@ -161,23 +215,23 @@ def setup():
     GROUP BY ?item
     """.replace("{SEPARATOR}", SEPARATOR)
 
-    contents = cache_result(query, lambda q: get_results(WIKIDATA_ENDPOINT_URL, q))
-    alt_contents = cache_result(query2, lambda q: get_results(WIKIDATA_ENDPOINT_URL, q))
+    contents = query_cache_fn(query, lambda q: query_wikidata(WIKIDATA_ENDPOINT_URL, q))
+    alt_contents = query_cache_fn(query2, lambda q: query_wikidata(WIKIDATA_ENDPOINT_URL, q))
 
     dataset = {}
     alt_table = {}
 
     for alt in alt_contents["results"]["bindings"]:
-        id = map_if(retrieve(alt, "item/value", None), lambda x: x.split('/')[-1])
-        alt = map_if(retrieve(alt, "alt_labels2/value", None), lambda x: x.split(SEPARATOR))
+        id = map_if(get_recurse(alt, "item/value", None), lambda x: x.split('/')[-1])
+        alt = map_if(get_recurse(alt, "alt_labels2/value", None), lambda x: x.split(SEPARATOR))
         alt_table[id] = alt
 
     for content in contents["results"]["bindings"]:
-        label_en = retrieve(content, 'itemLabel/value', None)
+        label_en = get_recurse(content, 'itemLabel/value', None)
         if label_en is None:
             continue
 
-        id = map_if(retrieve(content, "item/value", None), lambda x: x.split('/')[-1])
+        id = map_if(get_recurse(content, "item/value", None), lambda x: x.split('/')[-1])
         elem = {
             "id": id,
             "name": label_en,
@@ -185,7 +239,7 @@ def setup():
         }
 
         for key in ["subclass_of", "study_by", "health_speciality", "symptoms_and_signs"]:
-            elem[key] = map_if(retrieve(content, key + "/value", None), lambda x: x.split(SEPARATOR) if len(x) > 0 else [])
+            elem[key] = map_if(get_recurse(content, key + "/value", None), lambda x: x.split(SEPARATOR) if len(x) > 0 else [])
 
         dataset[id] = elem
 
@@ -196,7 +250,7 @@ def setup():
         id = elem['id']
         names = elem['alt'] + [elem['name']]
         for name in names:
-            name = tokenizer(name)
+            name = tokenize(name)
 
             if name == []:
                 continue
@@ -219,7 +273,7 @@ def setup():
                 dict(list(guideline.items()) + [("matched", search(guideline['label'], dataset_index_tags, dataset_index_ids))])
             )
         return matched_guidelines
-    matched_guidelines = cache_result(SEPARATOR.join([g['label'] for g in guidelines] + dataset_index_ids), compute_it)
+    matched_guidelines = query_cache_fn(SEPARATOR.join([g['label'] for g in guidelines] + dataset_index_ids), compute_it)
 
     A = len([x for x in matched_guidelines if x["matched"] == []])
     print("Unmatched proportion: {:.2f}% ({} elements)".format(A / len(matched_guidelines) * 100, A))
@@ -230,7 +284,10 @@ def setup():
 
     return matched_guidelines, dataset, search_it
 
-def extract_field(domains):
+def extract_unique(domains):
+    '''
+        Extract the a list of unique fields from a list of domains
+    '''
     first_fields = set()
     i = -len(domains)
     for d in domains:
@@ -243,6 +300,9 @@ def extract_field(domains):
     return list(first_fields)
 
 def proximity_heuristic(d1, dbase):
+    '''
+        Compute the proximity heuristic between two lists of fields
+    '''
     if len(dbase) == 0:
         return 0
 
@@ -253,14 +313,25 @@ def proximity_heuristic(d1, dbase):
 
     return (score) / len(dbase)
 
-def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 5):
+def find_positive_and_negative_match(dataset, search, multiindex, true_positive_q, ref_fields, n_max = 5):
+    '''
+        Find a positive and negative match for a given query
+    
+    Args:
+        dataset (dict): The dataset
+        search (function): The search function to extract the related elements from Qid
+        multiindex (dict): The multiindex
+        true_positive_q (str): The true positive query
+        ref_fields (list): The list of reference fields
+        n_max (int): The maximum number of elements to retrieve
+    '''
     scores = 0
     elems = None
 
     for _ in range(n_max):
         q_init = random.choice(list(dataset.keys()))
-        fields,_ = list(zip(*metric_search(dataset, search, q_init)))
-        fields = extract_field(fields)
+        fields,_ = list(zip(*construct_classication(dataset, search, q_init)))
+        fields = extract_unique(fields)
         heuristic = proximity_heuristic(fields, ref_fields)
 
         if (heuristic < scores or elems is None) and q_init != true_positive_q:
@@ -270,6 +341,7 @@ def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref
     # Generate the powerset
     field_powerset = list(powerset(ref_fields))
 
+    # Notice the halting problem down below
     while True:
         elem = random.choice(field_powerset)
         if len(elem) == 0:
@@ -281,9 +353,15 @@ def find_matching_not_matching(dataset, search, multiindex, true_positive_q, ref
             return elems, n_q
 
 def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], list[str], list[str]]:
+    '''
+        Generate a dataset from a list of labels and queries
+    Args:
+        labels (list[str]): The list of labels
+        queries (list[str]): The list of queries
+    '''
     # Extract guidelines and dataset
-    guidelines, dataset, search = setup()
-    multiindex = build_multiindex(dataset)
+    guidelines, dataset, search = download_dataset()
+    multiindex = build_speciality_multiindex(dataset)
 
     # Match each Q... to a list of labels
     @cache
@@ -329,8 +407,8 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
             q_init = [guideline["matched"] for guideline in guidelines if guideline["label"].lower() == rand_elem.lower()][0][0]
 
             # Check the history
-            domains,_ = list(zip(*metric_search(dataset, search, q_init)))
-            domains = extract_field(domains)
+            domains,_ = list(zip(*construct_classication(dataset, search, q_init)))
+            domains = extract_unique(domains)
             if len(domains) == 0: # Partially fixes the halting problem
                 kernel_set.add(rand_elem)
                 rej = random.choice(labels)
@@ -344,7 +422,8 @@ def generate_dataset(labels: list[str], queries: list[str]) -> Tuple[list[str], 
                 text.append(queries[rand_id])
 
             else:
-                q_min, q_max = find_matching_not_matching(dataset, search, multiindex, q_init, domains) # TODO: Fix the Halting problem... lol
+                # Notice that this code may not terminate
+                q_min, q_max = find_positive_and_negative_match(dataset, search, multiindex, q_init, domains)
 
                 if q_value_to_random_label(q_min) != elem_json:
                     text.append(queries[rand_id])
