@@ -2,7 +2,7 @@
     "general_settings" : {
         "process_file": "data/structure/pipelines/pipeline_2.json",
         "base_model_id": "HuggingFaceH4/zephyr-7b-beta",
-        "task": "po",
+        "task": "qa",
         "use_flash_attn": false
     },
 
@@ -22,7 +22,8 @@
         "force_retokenize": false,
         "n_context_guidelines": 3,
         "with_token": true,
-        "with_output": true,
+        "with_output": false,
+        "with_assistant": true,
         "test_size": 0.1,
         "padding_side": "left"
     },
@@ -46,7 +47,7 @@
 
     "wandb_parameters" : {
         "start_from_checkpoint": true,
-        "baseline_name" : "checkpoint-model2-ipo-guillaume:v14",
+        "baseline_name" : "checkpoint-model2-qa:v60",
         "run_name": "model2-ipo-guillaume-eval",
         "wandb_key": "ENCRYPTED{zjjRnC5U+RL2tKi4kTdRvQ==;taEY67h8tVqQAKLdYTlIX7jJIF2DwWa21pB8M6R59lP7um7dDyHhUw==;OloZJTpIFF9in2gkW6hBkQ==}",
         "wandb_project": "minimed-finetune-proto0",

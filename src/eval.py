@@ -87,7 +87,7 @@ def main():
         "top_p": 1.0,
         "do_sample": True,
         "pad_token_id": tokenizer.eos_token_id,
-        "max_new_tokens": 1024,
+        "max_new_tokens": 256,
     }
 
     invalid_json = 0
@@ -105,7 +105,7 @@ def main():
         result = tokenizer.decode(output[0])
 
         # Retrieve the result of the model (by cutting on the tag <|assistant|>)
-        string = result.split('<|assistant|>')[-1].split('<|system|>')[0].replace('</s>', '').replace('<s>', '').replace('\n', '')
+        string = result.split('<|assistant|>')[-1].split('<|system|>')[0].replace('</s>', '').replace('\n', '')
 
         # Repair json
         # I know, this is a very bad practice and may break but oh look a butterfly 🦋

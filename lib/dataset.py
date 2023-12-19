@@ -125,6 +125,9 @@ def format_chat_for_qa(example, config, tokenizer):
                               "content": example["labels"]})
 
     tokenized_output = tokenizer.apply_chat_template(chat_template, tokenize=False, add_generation_prompt=False)
+    if config["dataset_generation"].get("with_assistant", False):
+        tokenized_output += "\n<|assistant|>"
+
     return {"text": tokenized_output}
 
 
@@ -203,6 +206,7 @@ def load_dataset(config: dict, tokenizer) -> DatasetDict:
     def tokenize(example):
         if config["dataset_generation"].get("padding_side") is not None:
             tokenizer.padding_side = config["dataset_generation"]["padding_side"]
+
         tokenized = tokenizer.encode(example["text"], add_special_tokens=True,
                                      padding="max_length")
         return {"input_ids": tokenized}
