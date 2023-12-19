@@ -38,14 +38,14 @@
         "neftune_noise_alpha": 5,
         "eval_accumulation_steps": 1,
         "gradient_checkpointing": true,
-        "gradient_accumulation_steps": 4,
+        "gradient_accumulation_steps": 2,
         "gradient_checkpointing_kwargs" :  {"use_reentrant": false}
     },
 
     "wandb_parameters" : {
         "start_from_checkpoint": true,
         "baseline_name" : "model2-qa-reinit",
-        "run_name": "model2-qa-contrastive",
+        "run_name": "model2-qa-michael",
         "reinit_weights" : false,
         "wandb_key": "ENCRYPT{r7mfHokpVPge9wKJnIVRtQ==;NutfIIDjyMpweJ3cgI+YHVrvyyfu0Dqqyn/Ujpp0drVPJuHBzlpdlQ==;RucHJE+LLM5U/dLde7eAOA==}",
         "wandb_project": "minimed-finetune-proto0",

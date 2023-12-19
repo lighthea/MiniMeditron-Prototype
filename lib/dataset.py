@@ -176,7 +176,7 @@ def save_dataset(dataset: Dataset, config: dict):
 
 
 def fill_with_embeddings(config: dict, dataset: Dataset):
-    if "embedding" not in config["dpo_parameters"]:
+    if "dpo_parameters" not in config or "embedding" not in config["dpo_parameters"]:
         return dataset
     
     match config["dpo_parameters"]["embedding"]:
@@ -206,6 +206,9 @@ def upsample_preferences(config: dict, dataset: Dataset, preference_fun, tokeniz
 
 
 def generate_preference_based_dataset(config: dict, dataset: Dataset, tokenizer):
+    if "dpo_parameters" not in config:
+        return dataset
+
     dataset = dataset.map(lambda x: format_chat_for_preference_optimisation(config, x, dataset, tokenizer))
 
     if "upsample" in config["dpo_parameters"]:
